@@ -1,0 +1,31 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: ProcBase - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP63.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Debug/ProcBase.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ  /c 
+"C:\VC\day14\Process\ProcBase\ProcBase.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP63.tmp" 
+<h3>Output Window</h3>
+Compiling...
+ProcBase.cpp
+C:\VC\day14\Process\ProcBase\ProcBase.cpp(8) : error C2059: syntax error : '('
+C:\VC\day14\Process\ProcBase\ProcBase.cpp(26) : error C2065: 'EnumProcessModules' : undeclared identifier
+C:\VC\day14\Process\ProcBase\ProcBase.cpp(26) : error C2146: syntax error : missing ';' before identifier 'func'
+C:\VC\day14\Process\ProcBase\ProcBase.cpp(26) : error C2065: 'func' : undeclared identifier
+C:\VC\day14\Process\ProcBase\ProcBase.cpp(26) : error C2146: syntax error : missing ';' before identifier 'GetProcAddress'
+Error executing cl.exe.
+
+
+
+<h3>Results</h3>
+ProcBase.obj - 5 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

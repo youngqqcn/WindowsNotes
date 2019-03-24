@@ -1,0 +1,1009 @@
+一 组合框
+
+	1.组合框的样式
+		1.1 简单组合框  CBS_SIMPLE
+		1.2 下拉式组合框  CBS_DROPDOW  可输入
+		1.3 下拉列表式组合框 CBS_DROPDOWNLIST 
+			  只能从下拉列表中选择
+			  
+	2.组合框的使用
+		2.1 创建
+		
+	
+	
+	CB_DIR 
+		wParam 显示类型
+		lParam 显示信息
+	
+	通知消息
+		CBN
+
+二 列表框 ListBox
+	1.列表框的样式
+		1.1 单选列表框  默认
+		1.2 多选列表框 LBS_MULTIPLESEL
+	2.列表框的使用
+		
+三 滚动条
+	1.滚动条样式
+		1.1 水平滚动条 SBS_HORZ
+		1.2 垂直滚动条 SBS_VERT
+	2.滚动条的使用
+		水平滚动: WM_HSCROLL
+		垂直滚动: WM_VSCROLL
+		
+		INT iScrollCode	= LOWORD(wParam); //滚动标识
+		INT iPos = HIWORD(wParam); //当前滑块的位置
+		lParam 窗口句柄
+		
+		HIWORD(wParam) 只在 SB_THUMBPOSITION/SB_THUMBBACK 有效
+		
+	3.滚动条的滚动范围
+		SBM_SETRANGE
+			
+		SBM_GETRANGE
+	
+	
+	
+	4.注意点!  滚动条消息是全局的, 使用的时候, 需要注意区分消息来源!
+	
+	
+	
+	
+	
+	
+三, 控件的自绘制
+	1. 控件具有 ONWERDRAW 样式
+	 BUTTON  LISTBOX  COMBOBOX
+	 
+	 WM_DRAWITEM  实现控件的绘制
+			  wParam  控件ID
+			LPDRAWITEMSTRUCT pDis = (LPDRAWITEMSTRUCT)lParam;
+	 WM_MEASUREITEM  计算控件大小
+	 
+	 
+	 =============================================================
+
+
+
+	 ==============================WinComboBox=====================
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+
+#include "resource.h"
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+
+void OnCreate(HWND hWnd, 	UINT uMsg, 
+			WPARAM wParam, 	LPARAM lParam)
+{
+	//简单组合框的创建
+	CreateWindow("COMBOBOX", "SIMPLE",
+		WS_CHILD | WS_VISIBLE|CBS_SIMPLE,
+		50, 50, 200, 300, hWnd, (HMENU)1001, g_hInst, NULL
+		);
+
+	//下拉式组合框的创建
+	CreateWindow("COMBOBOX", "DROPDOWN",
+		WS_CHILD | WS_VISIBLE|CBS_DROPDOWN,
+		300, 50, 200, 300, hWnd, (HMENU)1002, g_hInst, NULL
+		);
+
+	//下拉列表式组合框的创建
+	CreateWindow("COMBOBOX", "DROPDOWNLIST",
+		WS_CHILD | WS_VISIBLE|CBS_DROPDOWNLIST,
+		600, 50, 200, 300, hWnd, (HMENU)1003, g_hInst, NULL
+		);
+
+}
+
+void OnAddCB(HWND hWnd)
+{
+	HWND hSimple = GetDlgItem(hWnd, 1001);
+
+	
+	for (INT i = 0;i < 10; i++)
+	{
+		CHAR szText[100] ={0};
+		memset(szText, 0, sizeof(szText));
+		sprintf(szText,  "Hello ComboBox %d", i);
+		SendMessage(hSimple, CB_ADDSTRING, 0, (LPARAM)szText);
+		SendMessage(hSimple, CB_SETITEMDATA, i, 100*i);
+	}
+	
+}
+
+void OnDelCB(HWND hWnd)
+{
+	HWND hSimple1 = GetDlgItem(hWnd, 1001);
+	//HWND hSimple2 = GetDlgItem(hWnd, 1002);
+	//HWND hSimple3 = GetDlgItem(hWnd, 1003);
+
+	SendMessage(hSimple1, CB_DELETESTRING, (WPARAM)5, 0);
+	//SendMessage(hSimple2, CB_DELETESTRING, (WPARAM)5, 0);
+	//SendMessage(hSimple3, CB_DELETESTRING, (WPARAM)5, 0);
+
+}
+
+//清空所有项
+void OnReset(HWND hWnd)
+{
+	HWND hSimple1 = GetDlgItem(hWnd, 1001);
+	SendMessage(hSimple1, CB_RESETCONTENT, 0, 0);
+}
+
+void OnSel(HWND hWnd)
+{
+	HWND hSimple1 = GetDlgItem(hWnd, 1001);
+	HWND hSimple2 = GetDlgItem(hWnd, 1002);
+	HWND hSimple3 = GetDlgItem(hWnd, 1003);
+	
+	//SendMessage(hSimple1, CB_SETCURSEL, 4, 0);
+	LRESULT iSel = SendMessage(hSimple1, CB_GETCURSEL, 0, 0 );  //获取当前选择项 索引
+	LRESULT iValue = SendMessage(hSimple1, CB_GETITEMDATA, iSel, 0);//获取当前选择 保存的数据
+
+	CHAR szText[100] ={0};
+	memset(szText, 0, sizeof(szText));
+	sprintf(szText,  "%d", iValue); 
+	MessageBox(NULL, szText, "获取的数据", MB_OK);
+	//SendMessage(hSimple2, CB_GETCURSEL, 0, 0);
+	//SendMessage(hSimple3, CB_GETCURSEL, 0, 0);
+
+}
+
+void OnFind(HWND hWnd)
+{
+	HWND hSimple1 = GetDlgItem(hWnd, 1001);
+	CHAR szText[100] ={0};
+	memset(szText, 0, sizeof(szText));
+	sprintf(szText,  "Hello ComboBox %d", 6); //查找第6项
+	LRESULT iFind = SendMessage(hSimple1, CB_FINDSTRING, -1,  (LPARAM)szText);
+	SendMessage(hSimple1, CB_SETCURSEL, iFind, 0);
+}
+
+void OnPath(HWND hWnd)
+{
+	HWND hSimple1 = GetDlgItem(hWnd, 1001);
+	HWND hSimple2 = GetDlgItem(hWnd, 1002);
+	HWND hSimple3 = GetDlgItem(hWnd, 1003);
+	CHAR szText[300] = "C:\\*.*";
+	//memset(szText, 0, sizeof(szText));
+	//sprintf(szText,  "Hello ComboBox %d", 6); //查找第6项
+
+	SendMessage(hSimple1, CB_DIR, DDL_DIRECTORY|DDL_ARCHIVE, (LPARAM)szText);
+	SendMessage(hSimple2, CB_DIR, DDL_DIRECTORY|DDL_ARCHIVE, (LPARAM)szText);
+	SendMessage(hSimple3, CB_DIR, DDL_DIRECTORY|DDL_ARCHIVE, (LPARAM)szText);
+
+}
+
+
+void OnCommand(HWND hWnd, 	UINT uMsg, 
+			WPARAM wParam, 	LPARAM lParam)
+{
+	INT iNotifyCode = HIWORD(wParam);
+	INT iEventID = LOWORD(wParam);
+	switch(iEventID)
+	{
+	case ID_ADD_CB: //添加
+		OnAddCB(hWnd);
+		break;
+	case ID_DEL_CB: //删除
+		OnDelCB(hWnd);
+		break;
+	case ID_RESET_CB: //清空
+		OnReset(hWnd);
+		break;
+	case ID_SEL:
+		OnSel(hWnd);
+		break;
+	case ID_FIND:
+		OnFind(hWnd);
+		break;
+	case ID_PATH: //目录
+		OnPath(hWnd);
+		break;
+	case 1001:
+		{
+			switch(iNotifyCode)
+			{
+			case CBN_SELCHANGE:
+				MessageBox(NULL, "CBN_SELCHANGE", "WinComBo", MB_OK);
+				break;
+			}
+
+		}
+		break;
+	}
+}
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_COMMAND:
+		OnCommand(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_CREATE:
+		OnCreate(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE + 1);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_MAIN)), 
+		g_hInst, NULL);
+
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	//NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+==================================================
+
+
+
+
+==========================WinListBox===============================
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+
+#include "resource.h"
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+HWND g_hSingleLB = NULL;
+HWND g_hMultiLB = NULL;
+
+
+void OnCreate(HWND hWnd, 
+			  UINT uMsg, 
+			  WPARAM wParam, 
+				LPARAM lParam)
+{
+	g_hSingleLB = CreateWindow("LISTBOX", "SINGLE LISTBOX", 
+				WS_CHILD |WS_VISIBLE | LBS_STANDARD,
+				50, 50, 200, 100, hWnd, (HMENU)1001, g_hInst, NULL);
+
+	g_hMultiLB  = CreateWindow("LISTBOX", "SINGLE LISTBOX", 
+				WS_CHILD |WS_VISIBLE | LBS_MULTIPLESEL | LBS_STANDARD,
+				300, 50, 200, 100, hWnd, (HMENU)1001, g_hInst, NULL);
+}
+
+void OnAdd()
+{
+	for(INT i = 0; i < 10; i++)
+	{
+		CHAR szText[100] = {0};
+		memset(szText, 0, sizeof(0));
+		sprintf(szText, "ListBox %d", i);
+
+		SendMessage(g_hSingleLB, LB_ADDSTRING, 0, (LPARAM)szText);
+		SendMessage(g_hMultiLB, LB_ADDSTRING, 0, (LPARAM)szText);
+	}
+}
+
+void OnSel()
+{
+	SendMessage(g_hSingleLB, LB_SETCURSEL, 2, 0);
+
+	SendMessage(g_hMultiLB, LB_SETSEL, TRUE, 7);
+	SendMessage(g_hMultiLB, LB_SETSEL, TRUE, 8);
+	SendMessage(g_hMultiLB, LB_SETSEL, TRUE, 9);
+
+	LRESULT iCount = SendMessage(g_hMultiLB, LB_GETSELCOUNT, 0, 0);
+	CHAR szText[100] = {0};
+	memset(szText, 0, sizeof(0));
+	sprintf(szText, " %d", iCount);
+	MessageBox(NULL, szText, ("选择项数量"), MB_OK);
+
+
+	//获取选择项的索引号
+	INT iSel[20] = {0};
+	SendMessage(g_hMultiLB, LB_GETSELITEMS, 20, (LPARAM)iSel);
+	
+
+
+
+
+}
+
+
+void OnCommand(HWND hWnd, UINT uMsg, 
+			  WPARAM wParam, LPARAM lParam)
+{
+	int iNotityCode = HIWORD(wParam);
+	int iCtrlID = LOWORD(wParam); //控件id
+	switch(iCtrlID)
+	{
+	case ID_ADD:
+		OnAdd();
+		break;
+	case ID_SEL:
+		OnSel();
+		break;
+	}
+
+}
+
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_COMMAND:
+		OnCommand(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_CREATE:
+		OnCreate(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE + 1);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT,NULL, LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_MAIN)), 
+		g_hInst, NULL);
+
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	//NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+
+=============================================================
+	 
+	 ===================	WinOwnerDraw========================
+
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+
+void  OnCreate(HWND hWnd, 	UINT uMsg, WPARAM wParam, 
+			   LPARAM lParam)
+{
+	
+	CreateWindow("BUTTON", "MyButton", 	
+		WS_CHILD | WS_VISIBLE |BS_OWNERDRAW,
+		50, 50, 200, 30,  hWnd, 
+		(HMENU)1001, g_hInst, NULL);
+}
+
+
+
+void  OnDrawItem(HWND hWnd, UINT uMsg, WPARAM wParam, 	LPARAM lParam)
+{
+	LPDRAWITEMSTRUCT pDis = (LPDRAWITEMSTRUCT)lParam;
+	if(ODT_BUTTON == pDis->CtlType)
+	{
+		if(pDis->itemState & ODS_SELECTED)
+		{
+			HBRUSH hBrush = CreateSolidBrush(RGB(200, 200, 255));
+			HBRUSH hOldBursh = (HBRUSH)SelectObject(pDis->hDC, hBrush);
+			RoundRect(pDis->hDC, 
+				pDis->rcItem.left, 
+				pDis->rcItem.top, pDis->rcItem.right, 
+				pDis->rcItem.bottom, 15, 15);
+
+			CHAR szName[260] = "你好";
+			INT iOldMode  = SetBkMode(pDis->hDC, TRANSPARENT);
+			//GetWindowText(pDis->hwndItem, szName, sizeof(szName));
+			DrawText(pDis->hDC, szName, strlen(szName), &pDis->rcItem,
+				DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			
+			SelectObject(pDis->hDC, hOldBursh);
+			DeleteObject(hBrush);
+			SetBkMode(pDis->hDC,iOldMode);
+		}
+		else
+		{
+			HBRUSH hBrush = CreateSolidBrush(RGB(100, 100, 255));
+			HBRUSH hOldBursh = (HBRUSH)SelectObject(pDis->hDC, hBrush);
+			RoundRect(pDis->hDC, 
+				pDis->rcItem.left, 
+				pDis->rcItem.top, pDis->rcItem.right, 
+				pDis->rcItem.bottom, 15, 15);
+
+			CHAR szName[260] = "你好";
+			INT iOldMode  = SetBkMode(pDis->hDC, TRANSPARENT);
+			//GetWindowText(pDis->hwndItem, szName, sizeof(szName));
+			DrawText(pDis->hDC, szName, strlen(szName), &pDis->rcItem,
+				DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			
+			SelectObject(pDis->hDC, hOldBursh);
+			DeleteObject(hBrush);
+			SetBkMode(pDis->hDC,iOldMode);
+		}
+	}
+
+}
+
+/*
+void OnMeasureItem(HWND hWnd, UINT uMsg, WPARAM wParam, 	LPARAM lParam)
+{
+
+}
+*/
+
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_CREATE:
+		OnCreate(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_DRAWITEM:
+		OnDrawItem(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_MEASUREITEM: //计算控件大小
+		//OnMeasureItem(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, 
+		g_hInst, NULL);
+
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	//NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+====================================================================	 
+	 
+	 
+	 
+	 ===========================WinScrollBar==============================
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+HWND g_hHorz = NULL;
+HWND g_hVert = NULL;
+
+void OnCreate(HWND hWnd, UINT uMsg, 
+			  WPARAM wParam, LPARAM lParam)
+{
+	//创建滚动条
+	g_hHorz =	CreateWindow("SCROLLBAR", "HORZ", 
+		WS_CHILD | WS_VISIBLE | SBS_HORZ ,
+		50, 350, 300, 30, hWnd, (HMENU)1001, 
+		g_hInst, NULL);
+
+	g_hVert = CreateWindow("SCROLLBAR", "VERT", 
+		WS_CHILD | WS_VISIBLE | SBS_VERT,
+		350, 50, 30, 300, hWnd, (HMENU)1002, 
+		g_hInst, NULL);
+
+	//设置滚动范围
+	SendMessage(g_hHorz, SBM_SETRANGE, 0, 300);
+	SendMessage(g_hVert, SBM_SETRANGE, 0, 300);
+}
+
+void OnHScroll(HWND hWnd, UINT uMsg, 
+			  WPARAM wParam, LPARAM lParam)
+{
+	INT iScrollCode	= LOWORD(wParam);
+	INT iPos = HIWORD(wParam);
+	
+	switch(iScrollCode)
+	{
+	case SB_LINELEFT:
+		iPos = SendMessage(g_hHorz, SBM_GETPOS, 0, 0);
+		iPos -= 10;
+		SendMessage(g_hHorz, SBM_SETPOS, (WPARAM)iPos, (LPARAM)TRUE);
+		break;
+		break;
+	case SB_LINERIGHT:
+		iPos = SendMessage(g_hHorz, SBM_GETPOS, 0, 0);
+		iPos += 10;
+		SendMessage(g_hHorz, SBM_SETPOS, (WPARAM)iPos, (LPARAM)TRUE);
+		break;
+	case SB_PAGERIGHT:
+		iPos = SendMessage(g_hHorz, SBM_GETPOS, 0, 0);
+		iPos += 20;
+		SendMessage(g_hHorz, SBM_SETPOS, (WPARAM)iPos, (LPARAM)TRUE);
+		break;
+	case SB_PAGELEFT:
+		iPos = SendMessage(g_hHorz, SBM_GETPOS, 0, 0);
+		iPos -= 20;
+		SendMessage(g_hHorz, SBM_SETPOS, (WPARAM)iPos, (LPARAM)TRUE);
+		break;
+	case SB_THUMBPOSITION: //拖拽滑块
+		SendMessage(g_hHorz, SBM_SETPOS, iPos, TRUE);
+		break;
+	}
+
+	InvalidateRect(hWnd, NULL, TRUE);
+}
+
+void OnVScroll(HWND hWnd, UINT uMsg, 
+			   WPARAM wParam, LPARAM lParam)
+{
+	INT iScrollCode	= LOWORD(wParam);
+	INT iPos = HIWORD(wParam);
+
+	switch(iScrollCode)
+	{
+	case SB_LINEUP:
+		iPos = SendMessage(g_hVert, SBM_GETPOS, 0, 0);
+		iPos -= 10;
+		SendMessage(g_hVert, SBM_SETPOS, (WPARAM)iPos, (LPARAM)TRUE);
+		break;
+		break;
+	case SB_LINEDOWN:
+		iPos = SendMessage(g_hVert, SBM_GETPOS, 0, 0);
+		iPos += 10;
+		SendMessage(g_hVert, SBM_SETPOS, (WPARAM)iPos, (LPARAM)TRUE);
+		break;
+	case SB_PAGEDOWN:
+		iPos = SendMessage(g_hVert, SBM_GETPOS, 0, 0);
+		iPos += 20;
+		SendMessage(g_hVert, SBM_SETPOS, (WPARAM)iPos, (LPARAM)TRUE);
+		break;
+	case SB_PAGEUP:
+		iPos = SendMessage(g_hVert, SBM_GETPOS, 0, 0);
+		iPos -= 20;
+		SendMessage(g_hVert, SBM_SETPOS, (WPARAM)iPos, (LPARAM)TRUE);
+		break;
+	case SB_THUMBPOSITION: //拖拽滑块
+		SendMessage(g_hVert, SBM_SETPOS, iPos, TRUE);
+		break;
+	}
+
+	InvalidateRect(hWnd, NULL, TRUE);
+
+}
+
+
+void OnPaint(HWND hWnd, UINT uMsg, 
+			   WPARAM wParam, LPARAM lParam)
+{
+	PAINTSTRUCT ps = {0};
+	HDC hDC = BeginPaint(hWnd, &ps);
+
+	INT iVert = SendMessage(g_hVert, SBM_GETPOS, 0, 0);
+	INT iHroz = SendMessage(g_hHorz, SBM_GETPOS, 0, 0);
+
+	CHAR szText[]  = "Hello Scroll";
+	TextOut(hDC, 150 - iHroz, 150 - iVert, szText, strlen(szText));
+	EndPaint(hWnd, &ps);
+}
+
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_PAINT:
+		OnPaint(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_CREATE:
+		OnCreate(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_HSCROLL:
+		OnHScroll(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_VSCROLL:
+		OnVScroll(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW|WS_HSCROLL | WS_VSCROLL, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, 
+		g_hInst, NULL);
+
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	//NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+====================================================================
+
+
+
+
+
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 

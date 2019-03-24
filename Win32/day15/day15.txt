@@ -1,0 +1,656 @@
+
+
+
+一  线程局部存储空间(TLS)
+
+静态TLS 
+
+	使用   __declspec(thread) 变量名     前缀声明
+
+
+动态TLS
+	1.使用TlsAlloc 创建Tls索引号
+	2.使用TlsSetValue  设置值
+	3.使用TlsGetValue 获取Tls值
+	4.使用TlsFree释放TLs索引
+
+
+
+//////////////////////////////////////////////////////////////////////////////////
+
+// ThreadTls.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+
+#include "stdio.h"
+#include "stdlib.h"
+#include <windows.h>
+
+//__declspec(thread) char *g_pszText = NULL;   //每个线程单独有一个
+
+char *g_pszText = NULL; //多个线程共用一个, 会导致后来者覆盖前面的内容 
+
+
+
+//定义索引号
+DWORD g_iTlsIndex = 0;
+
+
+
+void Print()
+{
+//	printf("%s\n", g_pszText);
+
+	//3.从TLS索引中获取值
+	CHAR *pszText = (CHAR *)TlsGetValue(g_iTlsIndex);
+	printf("Tls: %s\n", pszText);
+}
+
+DWORD WINAPI ThreadProc(LPVOID lParam)
+{
+	char *pszText = (char *)lParam;
+	g_pszText = (CHAR *)malloc(strlen(pszText) + 1);
+	memset(g_pszText, 0, strlen(pszText) + 1);
+	strcpy(g_pszText, (CHAR *)lParam);
+
+
+	//2.将值保存到TLS索引当中
+	TlsSetValue(g_iTlsIndex, g_pszText);
+
+	while(1)
+	{
+		Print();
+		Sleep(1000);
+	}
+}
+
+void Create()
+{
+	HANDLE hThread = NULL;
+	DWORD iThreadID = 0;
+
+	CHAR szText[]  = "Thread Proc1---------";
+
+	hThread = CreateThread(NULL, 0, ThreadProc, szText, 0, &iThreadID);
+	
+
+	CHAR szText2[]  = "Thread Proc2---------";
+	HANDLE hThread2 = CreateThread(NULL, 0, ThreadProc, szText2, 0, &iThreadID);
+	WaitForSingleObject(hThread, INFINITE);
+	WaitForSingleObject(hThread2, INFINITE);
+}
+
+
+
+int main(int argc, char* argv[])
+{
+
+	//1.创建TLS创建索引号
+	g_iTlsIndex = TlsAlloc();
+
+	Create();
+
+	//释放索引号
+	TlsFree(g_iTlsIndex);
+	printf("Hello World!\n");
+	return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+二  线程同步
+
+1.多线程的问题
+	
+
+
+//等候多个内核对象
+DWORD WaitForMultipleObjects(
+	DWORD nCount,			//句柄的数量
+	const HANDLE* lpHandles,	//句柄数组
+	BOOL bWaitAll,			//等候方式
+	DWORD dwMilliseconds		//等候时间
+);
+
+
+
+
+三 原子锁:
+	执行单个指令时, 锁定操作, 不允许其他线程访问
+
+///////////////////////////////////////////////////////////
+
+// InterLock.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include <stdlib.h>
+#include "windows.h"
+
+LONG  g_iValue1 = 0;
+LONG  g_iValue2 = 0;
+
+DWORD WINAPI InterProc1(LPVOID lParam)
+{
+	for (long int i = 0; i < 20000000; i++)
+	{
+		g_iValue1++;
+	}
+	return 0;
+}
+
+DWORD WINAPI InterProc2(LPVOID lParam)
+{
+	for (long int i = 0; i < 20000000; i++)
+	{
+		//g_iValue2++;
+		InterlockedIncrement(&g_iValue2); //使用原子锁的加法运算
+	}
+	return 0;
+}
+
+
+void Create()
+{
+	DWORD iThreadId = 0;
+	//使用一个 proc 函数, 为什么每次都可以??
+	HANDLE hThread1 = CreateThread(NULL, 0, InterProc1, NULL, 0, &iThreadId);
+	HANDLE hThread2 = CreateThread(NULL, 0, InterProc1, NULL, 0, &iThreadId);
+	HANDLE hThread3 = CreateThread(NULL, 0, InterProc2, NULL, 0, &iThreadId);
+	HANDLE hThread4 = CreateThread(NULL, 0, InterProc2, NULL, 0, &iThreadId);
+
+	HANDLE hArray[] = { hThread1, hThread2, hThread3, hThread4 };
+	WaitForMultipleObjects(sizeof(hArray)/4, hArray, TRUE, INFINITE);
+
+	printf("%d\n", g_iValue1);
+	printf("%d\n", g_iValue2);
+
+	return;
+}
+
+
+
+int main(int argc, char* argv[])
+{
+	Create();
+	system("pause");
+	return 0;
+}
+
+
+
+///////////////////////////////////////////////////////////
+
+
+
+四  临界区(Critical Section)
+
+	1.临界区的作用
+		线程在执行代码是, 将代码锁定, 不允许其他线程执行, 只有该线程离开后, 
+		其他线程才能使用.
+
+	2.临界区的使用
+		2.1 初始化临界区
+			InitializeCriticalSection
+		2.2 临界区加锁
+			EnterCriticalSection
+		2.3 临界区解锁
+			LeavaCriticalSection
+		2.4 释放临界区
+			DeleteCriticalSection
+
+
+
+
+/////////////////////////////////////////////////////////////////////////
+
+
+// CriticalSection.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include "windows.h"
+#include "conio.h"
+
+CRITICAL_SECTION  g_cs = {0};
+
+void Print()
+{
+	EnterCriticalSection(&g_cs);
+	printf("fdsfsdf........\n");
+	LeaveCriticalSection(&g_cs);
+}
+
+DWORD WINAPI PrintProc(LPVOID pParam)
+{
+	while(1)
+	{
+		Print();
+		Sleep(1);
+	}
+	return 0;
+}
+
+
+void Create()
+{
+	DWORD iThreadID = 0;
+	HANDLE hThreads[2] = {0};
+
+	hThreads[0] = CreateThread(NULL, 0, PrintProc, NULL, 0, &iThreadID);
+	hThreads[1] = CreateThread(NULL, 0, PrintProc, NULL, 0, &iThreadID);
+
+	WaitForMultipleObjects(2, hThreads, TRUE, INFINITE);
+}
+
+
+
+int main(int argc, char* argv[])
+{
+	InitializeCriticalSection(&g_cs);
+
+	Create();
+	printf("Hello World!\n");
+
+	DeleteCriticalSection(&g_cs);
+	return 0;
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+
+
+
+五  事件
+
+	1.事件
+	通知的作用, 当收到事件时,线程可以执行; 否则,线程等待事件发生.
+
+	2.事件的使用
+		2.1 创建事件
+			HANDLE CreateEvent(
+				LPSECURITY_ATTRIBUTES lpEventAttributes,// 安全属性
+				BOOL bManualReset,// 复位方式
+				BOOL bInitialState,// 初始状态
+				LPCTSTR lpName // 对象名称
+			);
+		2.2 等候事件
+			WaitForSingleObject
+			WaitForMultipleSingleObjects
+		2.3 触发事件
+			BOOL SetEvent(HANDLE hEvent);
+		2.4 关闭事件
+			CloseHandle(HANDLE hEvent);
+
+
+
+//////////////////////////////////////////////////////////////
+// Event.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include "windows.h"
+#include "conio.h"
+
+HANDLE g_hEvent = NULL;
+
+
+DWORD WINAPI ThreadSend(LPVOID pParam)
+{
+	while(1)
+	{
+		SetEvent(g_hEvent); //触发事件
+		Sleep(1000);
+		
+	}
+	return 0;
+}
+
+
+
+DWORD WINAPI ThreadRecv(LPVOID pParam)
+{
+	while(1)
+	{
+
+		//等候事件
+		WaitForSingleObject(g_hEvent, INFINITE);
+		printf("收到事件: %p\n", g_hEvent);
+		ResetEvent(g_hEvent);
+	}
+	return 0;
+}
+
+void Create()
+{
+	DWORD iThreadId = 0;
+	HANDLE hThreads[2] = {NULL};
+
+	hThreads[1] = CreateThread(NULL, 0, ThreadRecv, NULL, 0, &iThreadId);
+	hThreads[0] = CreateThread(NULL, 0, ThreadSend, NULL, 0, &iThreadId);
+
+	WaitForMultipleObjects(2 , hThreads, TRUE,  INFINITE);
+
+}
+
+
+
+
+int main(int argc, char* argv[])
+{
+	g_hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	ResetEvent(g_hEvent);
+
+
+	Create();
+	//printf("Hello World!\n");
+
+
+	CloseHandle(g_hEvent);
+
+	//getch();
+	return 0;
+}
+
+/////////////////////////////////////////////////////////////////
+
+六  互斥量  
+
+	1.创建互斥量
+		HANDLE CreateMutex(
+			LPSECURITY_ATTRIBUTES lpMutexAttributes, // 指向安全属性的指针
+			BOOL bInitialOwner, // 初始化互斥对象的所有者
+			LPCTSTR lpName // 指向互斥对象名的指针
+		);
+		
+		bInitialOwner  为TRUE时表示当前创建互斥量的线程拥有互斥, 否则
+		
+		
+	2.等候互斥量
+		WaitForSingleObject
+		WaitForMultipleObject
+
+	3.释放互斥量
+		ReleaseMutex(HANDLE  handle)
+
+	4.关闭互斥量
+		CloseHandle
+
+
+/////////////////////////////////////////////////////////
+// Mutex.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include "windows.h"
+
+HANDLE g_hMutex = NULL;
+
+DWORD WINAPI ThreadProc1(LPVOID pParam)
+{
+	while(1)
+	{
+		//等候互斥量
+		WaitForSingleObject(g_hMutex, INFINITE);
+		printf("ThreadProc1---------\n");
+		Sleep(500);
+
+		//释放互斥量
+		ReleaseMutex(g_hMutex);
+	}
+	return 0;
+}
+
+DWORD WINAPI ThreadProc2(LPVOID pParam)
+{
+	while(1)
+	{
+		//等候互斥量
+		WaitForSingleObject(g_hMutex, INFINITE);
+		printf("ThreadProc2---------\n");
+		Sleep(500);
+
+		//释放互斥量
+		ReleaseMutex(g_hMutex);
+	}
+	return 0;
+}
+
+
+DWORD WINAPI ThreadProc3(LPVOID pParam)
+{
+	while(1)
+	{
+		//等候互斥量
+		WaitForSingleObject(g_hMutex, INFINITE);
+		printf("ThreadProc3---------\n");
+		Sleep(500);
+
+		//释放互斥量
+		ReleaseMutex(g_hMutex);
+	}
+	return 0;
+}
+
+
+
+void Create()
+{
+	DWORD iThreadID = 0;
+	HANDLE hThreads[3] = {NULL};
+	hThreads[0] = CreateThread(NULL, 0, ThreadProc1, NULL, 0, &iThreadID);
+	hThreads[1] = CreateThread(NULL, 0, ThreadProc2, NULL, 0, &iThreadID);
+	hThreads[2] = CreateThread(NULL, 0, ThreadProc3, NULL, 0, &iThreadID);
+
+
+
+	WaitForMultipleObjects(sizeof(hThreads)/sizeof(hThreads[0]), hThreads, TRUE, INFINITE);
+}
+
+
+
+int main(int argc, char* argv[])
+{
+	g_hMutex	= CreateMutex(NULL, FALSE, NULL);
+
+
+	Create();
+	//printf("Hello World!\n");
+
+	CloseHandle(g_hMutex);
+	return 0;
+}
+
+
+
+//////////////////////////////////////////////////////
+
+
+七  信号量
+
+	通知的作用, 和事件类似, 事件非0即1,  
+	信号量维护一个变量, 0表示无信号, 大于0表示有信号
+
+	
+	
+	使用信号量
+
+		1.创建信号量
+			HANDLE CreateSemaphore(
+    				LPSECURITY_ATTRIBUTES lpSemaphoreAttributes, // 安全属性
+    				LONG lInitialCount, // 初始信号量
+    				LONG lMaximumCount, // 最大信号量
+    				LPCTSTR lpName// 信号量名称
+			);
+		2.等候信号量
+			WaitForSingleObject
+			WaitForMultipleObject
+		3.释放信号量
+			BOOL ReleaseSemaphore(
+				HANDLE hSemaphore,
+				LONG lReleaseCount, //释放的数量
+				LPLONG lpPreviousCount //信号量原始值
+			);
+		4.关闭信号量
+			CloseHandle
+		5.其他函数
+			HANDLE OpenSemaphore(
+				DWORD dwDesiredAccess, // access
+				BOOL bInheritHandle, // inheritance option
+				LPCTSTR lpName // 信号量名称
+			);
+
+
+
+
+八 可等候定时器
+
+	1.可等候定时器
+		是一个精确的系统提供的定时器, 能够达到100ns级别
+
+	2.定时器的使用
+		
+		2.1 创建定时器
+			HANDLE WINAPI CreateWaitableTimer(
+				LPSECURITY_ATTRIBUTES lpTimerAttributes, //安全属性
+				BOOL bManualReset,	//重置方式
+				LPCTSTR lpTimerName);	//命名
+		2.2 设置定时器
+			BOOL SetWaitableTimer( 
+				HANDLE hTimer, //定时器句柄
+				const LARGE_INTEGER* pDueTime,  //第一次触发的时间,100ns级
+				LONG lPeriod, //后续每次触发的时间间隔, ms级别
+				PTIMERAPCROUTINE pfnCompletionRoutine, //APC处理函数
+				LPVOID lpArgToCompletionRoutine, //APC处理函数参数
+				BOOL fResume); // 休眠标识
+
+				pDeuTime   
+					正值: 绝对时间
+					负值: 相对于现在的时间间隔
+				lPeriod  
+					0: 定时器不再有后续触发
+				    大于0: 按照间隔触发
+				
+			工作方式: pDeuTime  > lPeriod  >lPeriod  >.......
+
+		2.3 等候定时器
+			WaitForSingleObject
+			WaitForMultipleObject
+		2.4 关闭定时器
+			CloseHandle
+
+//////////////////////////////////////////////////////////////////////
+
+// WaitableTimer.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+
+
+#define _WIN32_WINNT 0x0400   //版本
+
+#include "windows.h"
+HANDLE g_hTimer = NULL;
+
+
+DWORD WINAPI TimerProc(LPVOID pParam)
+{
+	while(1)
+	{
+		WaitForSingleObject(g_hTimer, INFINITE);
+		printf("hello world\n");
+	}
+	return 0;
+}
+
+
+
+void Create()
+{
+	//创建定时器
+	g_hTimer = CreateWaitableTimer(NULL, FALSE, NULL);
+	
+
+	//设置定时器
+	UINT64 uDueTime = -50000000;
+	SetWaitableTimer(g_hTimer, (PLARGE_INTEGER)&uDueTime, 1000, NULL, NULL, FALSE);
+
+
+	DWORD dwThreadID = 0;
+	HANDLE hThread = CreateThread(NULL, 0, TimerProc, NULL, 0, &dwThreadID);
+
+
+	WaitForSingleObject(hThread, INFINITE);
+	//关闭定时器
+	CloseHandle(g_hTimer);
+}
+
+
+
+
+int main(int argc, char* argv[])
+{
+	Create();
+
+	printf("Hello World!\n");
+	return 0;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+HANDLE CreateThread(
+	LPSECURITY_ATTRIBUTES lpThreadAttributes,//安全属性
+	SIZE_T dwStackSize,//初始化堆栈大小
+	LPTHREAD_START_ROUTINE lpStartAddress,//线程函数
+	LPVOID lpParameter,//线程函数参数
+	DWORD dwCreationFlags,//创建方式
+	LPDWORD lpThreadId//线程id号
+)
+
+
+
+
+
+

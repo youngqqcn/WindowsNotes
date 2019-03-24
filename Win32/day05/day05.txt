@@ -1,0 +1,643 @@
+鼠标消息
+
+	WM_LBUTTONDOWN		左键按下
+	WM_LBUTTONUP
+	WM_RBUTTONDOWN	
+	WM_RBUTTONUP
+	WM_MOUSEMOVE
+	WM_LBUTTONDBLCLK	左键双击
+	WM_LBUTTONDBLCLK 
+	WM_MOUSEWHEEL		滚轮
+
+
+消息的参数
+	
+	WPARAM	当前键盘和鼠标的状态
+	LPARAM	当前鼠标的坐标
+		X坐标	LOWORD(LParam) 低16位
+		Y坐标	HOWORD(LParam) 高16位
+
+		
+	WM_TIMER 
+		wParam : 定时器的ID
+		LParam : 定时器的处理函数
+	UINT SetTimer(	: 设置一个定时器
+		HWND hWnd : 窗口句柄, 可以为NULL
+		UINT nIDEvent : 定时器的ID
+		UINT uElapse : 定时器时间间隔
+		TIMERPROC lpTimerFunc : 定时器处理函数
+	)  返回一个创建好的定时器ID号
+	
+	BOOL KillTimer(
+		HWND hWnd, //窗口句柄
+		UINT uIDEvent //定时器ID
+	)
+	
+	
+	TimerProc(
+		HWND hWnd, 
+		UINT uMsg, 
+		UINT idEvent, //
+		DWORD dwTime //当前系统时间
+	)
+	
+	
+	
+  AppendMenu(
+  HMENU	hMenu,
+  UINT	uFlags,
+  UINT	uIDNewItem,
+  LPCTSTR lpNewItem)
+	uFlags:
+		MF_STRING是一个字符串
+		MF_POPUP uIDNewItem是一个子菜单句柄
+		MF_SEPARATOR	增加分隔项
+		MF_CHECKED/MF_UNCHECKED
+			设置和取消菜单项的对勾
+		MF_DISABLED/MF_ENABLE 
+			菜单项禁止和允许状态
+
+
+	WM_COMMAND消息
+		当用户点击菜单,按钮控件时
+		WPARAM
+			HIWORD: 通知消息标识
+			LOWORD: 菜单项的ID号
+		LPARAM:
+			控件的句柄
+		
+	菜单项的状态:
+		WM_INITMENUPOPUP消息
+			当用户点击菜单, 显示弹出菜单之前会向窗口发送WM_INITMENUPOPUP消息
+			WPARAM : 菜单句柄
+			LPARAM: 窗口位置(在主菜单中是第几项, 从0开始)
+		
+	======================================================================
+
+===========================WinMenu===================================\
+
+// WinPaint.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+#include <stdio.h>
+//WM_PAINT
+
+
+/*
+
+  AppendMenu(
+  HMENU	hMenu,
+  UINT	uFlags,
+  UINT	uIDNewItem,
+  LPCTSTR lpNewItem)
+	uFlags:
+		MF_STRING是一个字符串
+		MF_POPUP uIDNewItem是一个子菜单句柄
+		MF_SEPARATOR	增加分隔项
+		MF_CHECKED/MF_UNCHECKED
+			设置和取消菜单项的对勾
+		MF_DISABLED/MF_ENABLE 
+			菜单项禁止和允许状态
+
+
+
+ */
+
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+BOOL	g_bCheckCut = FALSE;
+
+void OnCreate(HWND hWnd, 
+			  UINT uMsg, 
+			  WPARAM wParam, 
+			  LPARAM lParam)
+{
+	HMENU hMainMenu = CreateMenu();
+	
+	HMENU hFileMenu= CreatePopupMenu();
+	AppendMenu(hFileMenu, MF_STRING, 0x1001, "新建" );
+	AppendMenu(hFileMenu, MF_STRING, 0x1002, "退出" );
+	AppendMenu(hMainMenu, MF_STRING|MF_POPUP, (UINT)hFileMenu,  "文件" );
+	
+	HMENU hEditMenu = CreatePopupMenu();
+	AppendMenu(hEditMenu, MF_STRING, 0x1003, "剪切" );
+	AppendMenu(hEditMenu, MF_STRING, 0x1004, "粘贴" );
+	AppendMenu(hEditMenu, MF_STRING, 0x1005, "复制" );
+	AppendMenu(hMainMenu, MF_STRING|MF_POPUP, (UINT)hEditMenu,  "编辑" );
+	
+	HMENU hHelpMenu = CreatePopupMenu();
+	AppendMenu(hHelpMenu, MF_STRING, 0x1006, "关于" );
+	AppendMenu(hMainMenu, MF_STRING|MF_POPUP, (UINT)hHelpMenu, "帮助" );
+	
+
+	SetMenu(hWnd, hMainMenu);
+}
+
+void OnCommand(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+			  LPARAM lParam)
+{
+	CHAR szText[120] = {0};
+	sprintf(szText, "OnCommand\n");
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+
+
+	UINT uID = LOWORD(wParam);
+	sprintf(szText, "%04X\n", uID);
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	switch(uID)
+	{
+	case 0x1002:
+		PostQuitMessage(0);
+		break;
+	case 0x1003:
+		g_bCheckCut = !g_bCheckCut;
+		break;
+	default:
+		break;
+	}
+}
+
+void OnInitMenuPopup(HWND hWnd, 
+					 UINT uMsg, 
+					 WPARAM wParam, 
+					  LPARAM lParam)
+{
+	CHAR szText[120] = {0};
+	sprintf(szText, "OnInitMenuPopup WPARAM=%08X LPARAM=%08X \n", wParam, lParam);
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+
+
+	HMENU hMenu = (HMENU)wParam;
+	CheckMenuItem(hMenu, 0x1003, MF_CHECKED | MF_BYCOMMAND);
+
+	if(TRUE == g_bCheckCut)
+	{
+		CheckMenuItem(hMenu, 0x1003, MF_CHECKED | MF_BYCOMMAND);
+	}
+	else
+	{
+		CheckMenuItem(hMenu, 0x1003, MF_UNCHECKED | MF_BYCOMMAND);
+	}
+
+
+}
+
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_CREATE:
+		OnCreate(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_COMMAND:
+		OnCommand(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_INITMENUPOPUP:
+		OnInitMenuPopup(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+	
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, 
+		g_hInst, NULL);
+	
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+	
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+		
+		
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	
+}
+
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	NewConsole();
+	
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+	
+	
+	return 0;
+}
+
+
+
+===============================================================
+
+
+
+
+============================WinMouseMsg=================
+
+// WinPaint.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+#include <string.h>
+#include <stdio.h>
+//WM_PAINT
+
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+void PrintLog(LPSTR pszLog)
+{
+	WriteConsole(g_hStdOut, pszLog, strlen(pszLog), NULL, NULL);
+}
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_LBUTTONDOWN:
+		PrintLog("WM_LBUTTONDOWN\n");
+		break;
+	case WM_LBUTTONUP:
+			PrintLog("WM_LBUTTONUP\n");
+		break;
+	case WM_RBUTTONDOWN:
+			PrintLog("WM_RBUTTONDOWN\n");
+		break;
+	case WM_RBUTTONUP:
+			PrintLog("WM_RBUTTONUP\n");
+		break;
+	case WM_MOUSEMOVE:
+		{
+			int iX = LOWORD(lParam);
+			int iY = HIWORD(lParam);
+			char buf[100] = {0};
+			sprintf(buf, "x = %d, y = %d\n", iX	, iY);
+			//PrintLog("WM_MOUSEMOVE\n");
+			PrintLog(buf);
+		}
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+	
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, 
+		g_hInst, NULL);
+	
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+	
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+		
+		
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	
+}
+
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+
+	NewConsole();
+	
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+	
+	
+	return 0;
+}
+
+
+
+=======================================================
+
+	
+	
+==============================WinTimer=======================
+// WinTimer.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+
+//自定义TimerProc 定时器处理函数
+void CALLBACK TimerProc1(HWND hWnd, UINT uMsg, UINT uTime, DWORD dwTime)
+{
+	CHAR szText[] = "Hello Timer TimerProc1\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+void OnCreate(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	SetTimer(hWnd, 1000, 1 * 1000, NULL);
+	SetTimer(hWnd, 1001, 2* 1000, NULL);
+
+	//SetTimer(NULL, 1003, 1 * 1000 ,  NULL);
+	//SetTimer(NULL, 1003, 1 * 1000 ,  TimerProc1);
+	SetTimer(hWnd, 1003, 1 * 1000 ,  TimerProc1);
+	//SetTimer(hWnd, 1003, 1 * 1000 ,  NULL);
+}
+
+void OnTimer(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch(wParam)
+	{
+	case 1000:
+		{
+		CHAR szText[] = "Hello Timer 1000\n";
+		WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+		}
+
+		break;
+	case 1001:
+		{
+			CHAR szText[] = "Hello Timer  1001\n";
+			WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+		}
+		break;
+	}
+
+
+	//CHAR szText[] = "Hello Timer\n";
+	//WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+}
+
+LRESULT CALLBACK  WndProc(HWND hWnd, 
+						  UINT uMsg,
+						  WPARAM wParam,
+						  LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_CREATE:
+		OnCreate(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_TIMER:
+		OnTimer(hWnd, uMsg, wParam,	lParam);
+		break;
+	case WM_DESTROY:
+		KillTimer(hWnd, 1000); //结束定时器
+		PostQuitMessage(0);
+		break;
+	}
+
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbClsExtra = NULL;
+	wce.cbSize = sizeof(wce);
+	wce.cbWndExtra = NULL;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor =NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.hInstance = g_hInst;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.style = CS_VREDRAW |CS_HREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+		return FALSE;
+
+	return TRUE;
+
+}
+
+
+HWND  CreateWnd(LPSTR pszClassName)
+{
+
+	HWND hWnd = CreateWindowEx(
+		0,pszClassName,
+		"MyWnd",
+		WS_OVERLAPPEDWINDOW, 
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		NULL, NULL, g_hInst, 0
+		);
+	return hWnd;
+}
+
+void Message()
+{
+	MSG msg = {0};
+
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+}
+
+
+void DisplayWnd(HWND hWnd)
+{
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	NewConsole();
+	g_hInst = hInstance;
+ 	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+	return 0;
+}
+
+
+
+======================================================================
+	
+	
+	
+	
+	
+	
+	
+	
+	

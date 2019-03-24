@@ -1,0 +1,41 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: WinLib - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP30.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /FR"Debug/" /Fp"Debug/WinLib.pch" /Yc"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ  /c 
+"C:\VC\day01\WinLib\StdAfx.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP30.tmp" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP31.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /FR"Debug/" /Fp"Debug/WinLib.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ  /c 
+"C:\VC\day01\HelloWorld\HelloWorld.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP31.tmp" 
+Creating command line "link.exe -lib /nologo /out:"Debug\WinLib.lib"  .\Debug\StdAfx.obj .\Debug\HelloWorld.obj "
+<h3>Output Window</h3>
+Compiling...
+StdAfx.cpp
+Compiling...
+HelloWorld.c
+c:\vc\day01\helloworld\helloworld.c(14) : fatal error C1010: unexpected end of file while looking for precompiled header directive
+Error executing cl.exe.
+Creating command line "bscmake.exe /nologo /o"Debug/WinLib.bsc"  .\Debug\StdAfx.sbr .\Debug\HelloWorld.sbr"
+Creating browse info file...
+BSCMAKE: error BK1506 : cannot open file '.\Debug\HelloWorld.sbr': No such file or directory
+Error executing bscmake.exe.
+<h3>Output Window</h3>
+
+
+
+<h3>Results</h3>
+WinLib.lib - 2 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

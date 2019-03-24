@@ -1,0 +1,488 @@
+======================WinKeyMsg==================================
+
+// WinPaint.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+//WM_PAINT
+
+#include <string.h>
+#include <stdio.h>
+
+
+HINSTANCE g_hInst = NULL;
+
+HANDLE g_hStdOut = NULL;
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_KEYDOWN:
+		{
+			TCHAR szNum[128] = {0};
+			//sprintf(szNum, "%c\n", wParam);
+			memset(szNum, 0, sizeof(szNum));
+			WriteConsole(g_hStdOut, szNum, strlen(szNum), NULL, NULL);
+			switch(wParam)
+			{
+			case VK_UP:
+				strcpy(szNum, "VK_UP");
+				WriteConsole(g_hStdOut, szNum, strlen(szNum), NULL, NULL);
+				break;
+			case VK_DOWN:
+				strcpy(szNum, "VK_DOWN");
+				WriteConsole(g_hStdOut, szNum, strlen(szNum), NULL, NULL);
+				break;
+			case VK_LEFT:
+				strcpy(szNum, "VK_LEFT");
+				WriteConsole(g_hStdOut, szNum, strlen(szNum), NULL, NULL);
+				break;
+			case VK_RIGHT:
+				strcpy(szNum, "VK_RIGHT");
+				WriteConsole(g_hStdOut, szNum, strlen(szNum), NULL, NULL);
+				break;
+			}
+
+
+			
+			//TCHAR szNum[128] = {0};
+			//sprintf(szNum, "%c\n", wParam);
+			//WriteConsole(g_hStdOut, szNum, strlen(szNum), NULL, NULL);
+			
+			//TCHAR szText[] = "WM_KEYDOWN\n";
+			//WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+		}
+		break;
+	case WM_KEYUP:
+		{
+			TCHAR szNum[128] = {0};
+			sprintf(szNum, "%c\n", wParam);
+			WriteConsole(g_hStdOut, szNum, strlen(szNum), NULL, NULL);
+			//TCHAR szText[] = "WM_KEYUP\n";
+			//WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+		}
+		break;
+	case WM_SYSKEYDOWN:
+		{
+			TCHAR szNum[128] = {0};
+			sprintf(szNum, "%c\n", wParam);
+			WriteConsole(g_hStdOut, szNum, strlen(szNum), NULL, NULL);
+			//TCHAR szText[] = "WM_SYSKEYDOWN\n";
+			//WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+		}
+		break;
+	case WM_SYSKEYUP:
+		{
+			TCHAR szNum[128] = {0};
+			sprintf(szNum, "%c\n", wParam);
+			WriteConsole(g_hStdOut, szNum, strlen(szNum), NULL, NULL);
+			//TCHAR szText[] = "WM_SYSKEYUP\n";
+			//WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+		}
+		break;
+	case WM_CHAR:
+		{
+			TCHAR szNum[128] = {0};
+			sprintf(szNum, "%c\n", wParam);
+			WriteConsole(g_hStdOut, szNum, strlen(szNum), NULL, NULL);
+			//TCHAR szText[] = "WM_CHAR\n";
+			//WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+		}
+		break;
+		
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+	
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, 
+		g_hInst, NULL);
+	
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+	
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+		
+		
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	
+}
+
+
+
+void NewConsole()
+{
+
+	AllocConsole(); //弹出一个控制台窗口
+
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	NewConsole();
+	
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+	
+	
+	return 0;
+}
+
+
+
+鼠标消息
+
+	WM_LBUTTONDOWN		左键按下
+	WM_LBUTTONUP
+	WM_RBUTTONDOWN	
+	WM_RBUTTONUP
+	WM_MOUSEMOVE
+	WM_LBUTTONDBLCLK	左键双击
+	WM_LBUTTONDBLCLK 
+	WM_MOUSEWHEEL		滚轮
+
+
+消息的参数
+	
+	WPARAM	当前键盘和鼠标的状态
+	LPARAM	当前鼠标的坐标
+		X坐标	LOWORD(LParam) 低16位
+		Y坐标	HOWORD(LParam) 高16位
+
+
+
+
+
+
+
+
+
+=======================================================================
+
+=============================WinMsg================================
+// WinMsg.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+#include <string.h>
+#include <stdio.h>
+/*
+消息机制
+
+
+消息处理
+	GetMessage和 PeekMessage的工作机制
+步骤1.从线程消息队列中获取消息, 如果找到消息, 就返回消息,	
+	进行消息处理.如果未找到消息, 执行 步骤2;
+步骤2.查找系统消息队列. 通过向系统消息队列查询, 如果找到消息,
+	获取消息并返回,进行消息处理. 如果未找到消息, 执行步骤3;
+步骤3.检查窗口需要重新绘制的范围,如果发现存在重新的范围,会
+	产生一个WM_PAINT消息,然后进行消息处理, 如果未找到,执行步骤4;
+步骤4.检查WM_TIMER定时器消息,如果发现存在已经到时的定时器,
+	会产生一个 WM_TIMER消息,进行消息处理. 如果未找到, 执行步骤5;
+步骤5.执行内存管理的工作.
+步骤6.根据函数不同, 处理结果不同:
+		GetMessage 会 "阻塞" 等候下一条消息
+		PeekMessage 让出控制权,交给后面的代码执行
+
+ 消息发送
+	发送(Send) 消息 - 直接发送给指定的窗口, 并等候结果.
+	投递(Post) 消息 - 发送到消息队列当中,立刻返回,由消息循环处理.
+	
+
+  PostMessage和SendMessage
+	PostMessage产生队列消息, 由于发送后不等候消息处理结果,
+	所以不能确定消息是否被处理成功了.
+	SendMessage产生非队列消息, 
+*/
+
+
+/*
+1.键盘消息
+	按键消息
+		WM_KEYDOWN		当键被按下时产生
+		WM_KEYUP		当键被释放时产生
+		WM_SYSKEYDOWN	当系统键被按下 Alt/F10 
+		WM_SYSKEYUP		当系统键释放时
+	字符消息
+		WM_CHAR		当有字符键被按下时产生
+				TranslateMessage会将WM_KEYDOWN消息中,
+				可以显示的按键,转换成WM_CHAR的消息
+消息参数
+	WPARAM	- 虚拟键码
+	LPARAM	- 相关的按键信息
+
+消息的使用
+	当有按键消息时,首先进入系统消息队列,然后
+
+ 键盘消息的顺序:
+	可显示字符: WM_KEYDOWN, WM_CHAR, WM_KEYUP
+	不可显示字符: WM_KEYDOWN, WM_KEYUP
+	系统键: WM_SYSKEYDOWN, WM_SYSKEYUP
+
+  
+  */
+
+
+
+
+
+
+HINSTANCE  g_Inst = NULL;
+HWND g_hButton = NULL;
+
+
+#define WM_FIRSTMSG		(WM_USER + 1) //0x0400 + 1
+#define WM_SECONDMSG	(WM_USER + 2)
+
+
+
+//WM_CREATE 不使用wParam, 只用 lParam  
+
+void OnCreate(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	LPCREATESTRUCT pCreateStruct = (LPCREATESTRUCT)lParam;
+	//MessageBox(NULL, pCreateStruct->lpszName, "OnCreate", MB_OK);
+
+	g_hButton = CreateWindowEx(0, "BUTTON", "BUTTON", WS_CHILD|WS_VISIBLE, 0, 0, 100, 100,
+		hWnd, NULL, g_Inst, NULL);
+
+
+	SendMessage(hWnd, WM_FIRSTMSG, 0, 0); //发送自定义消息
+}
+
+
+//当窗口的大小发生变化时, 会产生 WM_SIZE 消息
+void OnSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	int iWidth = LOWORD(lParam);
+	int iHeight = HIWORD(lParam);
+
+
+	CHAR szText[256] = {0};
+	sprintf(szText, "Width:%d, Height:%d", iWidth, iHeight);
+	//MessageBox(NULL, szText, "OnSize", MB_OK);
+
+
+	if(NULL != g_hButton)
+	{
+		int iX = (iWidth - 100) / 2;
+		int iY = (iHeight - 100) / 2;
+		MoveWindow(g_hButton, iX, iY, 100, 100, TRUE);
+	}
+
+}
+
+
+BOOL OnSysCommand(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch(wParam)
+	{
+	case SC_CLOSE:
+		if(IDOK == MessageBox(NULL, ("是否关闭"),("提示"), MB_OKCANCEL | MB_ICONWARNING))
+			return TRUE;
+		else
+			return FALSE;
+
+	}
+
+	return FALSE;
+}
+
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+
+
+	switch(uMsg)
+	{
+	case WM_CREATE: //当窗体被创建时, 产生的消息
+		OnCreate(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_SIZE:
+		OnSize(hWnd, uMsg, wParam, lParam);
+		break;
+// 	case WM_SYSCOMMAND:
+// 		{	
+// 		if(TRUE == OnSysCommand(hWnd, uMsg, wParam, lParam))
+// 			break;
+// 		else
+// 			return 0;
+// 		//break;
+// 		//return 0;
+// 		}
+	case WM_DESTROY: //窗口销毁时的消息
+		PostQuitMessage(0); //投递WM_QUIT 
+		//PostMessage(hWnd, WM_QUIT, 0, 0); //发完消息, 立即返回
+		//SendMessage(hWnd, WM_QUIT, 0, 0);
+		return 0;
+
+
+
+
+		
+
+		/*
+			1.定义自己的消息 ID     #define WM_FIRSTMSG	(WM_USER+1)
+			2.在窗口处理函数中, 处理消息
+			3.SendMessage/PostMessage 发送消息
+		*/
+	case WM_FIRSTMSG:
+		MessageBox(NULL, "First Msg", "Fist Msg", MB_OK);
+		break;
+	}
+
+	//使用系统函数处理未处理的消息类型
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(WNDCLASSEX);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE + 1);
+	wce.hCursor = 0;
+	wce.hIcon = 0;
+	wce.hInstance = g_Inst;
+	wce.hIconSm = 0;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName  = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+		return TRUE;
+	return FALSE;
+}
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd", WS_OVERLAPPEDWINDOW ,CW_USEDEFAULT, 
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		NULL, NULL, g_Inst, NULL);
+
+	return hWnd;
+}
+
+
+void DisplayWnd(HWND hWnd)
+{
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+/*
+
+BOOL  GetMessageA(
+	LPMSG lpMsg,//存放获取到的消息数据
+	HWND hWnd , //获取消息的窗口句柄
+	UINT wMsgFilterMin, //消息过滤器的起始消息
+    UINT wMsgFilterMax); //消息过滤器的终止消息
+	
+	//返回值:   成功获取消息, 发挥TRUE, 
+				如果获取到 WM_QUIT 返回FALSE
+*/
+
+/*
+typedef struct tagMSG {
+    HWND        hwnd;  //消息的窗口句柄
+    UINT        message; //消息标识
+    WPARAM      wParam; //参数, 32位
+    LPARAM      lParam;//参数, 32位
+    DWORD       time; //消息产生的时间
+    POINT       pt; //
+} MSG
+*/
+
+
+/*
+WM_DESTROY	//窗口销毁时的消息
+WM_CREATE	//窗口创建消息, 窗口创建后,
+			// 窗口处理函数收到的第一条消息
+			//可以在这个消息内,初始化/创建子窗口
+
+WM_SIZE		//当窗口大小发生变化时, 会收到这个消息
+			//可以在这个消息中调整窗口布局
+
+WM_SYSCOMMAND	//系统命令消息
+
+WM_PAINT 绘图消息
+
+键盘消息
+
+鼠标消息
+
+WM_TIMER 定时器消息
+

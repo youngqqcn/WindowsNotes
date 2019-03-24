@@ -1,0 +1,199 @@
+ 
+
+
+
+2.地址空间划分
+ 
+  用户空间
+	地址范围  0-0x7FFFFFFF (2G)
+
+	空指针区(NULL区)
+		地址范围 0   -  0x0000FFFF
+	用户区
+		0x00010000 - 0x7FFEFFFF
+	64K禁入区
+		0x7FFEFFFF - 0x7FFFFFFF
+
+  内核空间(系统, 驱动, 内核)
+	0x80000000 - 0xFFFFFFFFF
+
+
+
+地址映射
+	内存区域: 一段连续的地址空间 , 和 CPU的粒度, 操作系统相关
+		通常是以 64K 粒度存在.
+
+	区域的状态:
+		1) 保留 - 空闲, 可以被使用
+		2) 私有 - 已经被占用, 但是未使用
+		3) 映像 - 程序的代码使用 (代码段)
+		4) 映射 - 程序的数据(数据段)
+	
+
+typedef struct _SYSTEM_INFO
+{
+	union
+	{
+		DWORD dwOemId;
+		struct {
+			WORD wProcessorArchitecture;
+			WORD wReserved;
+		};
+	};
+	DWORD dwPageSize;
+	LPVOID lpMinimumApplicationAddress;
+	LPVOID lpMaximumApplicationAddress;
+	DWORD_PTR dwActiveProcessorMask;
+	DWORD dwNumberOfProcessors;
+	DWORD dwProcessorType;
+	DWORD dwAllocationGranularity;
+	WORD wProcessorLevel;
+	WORD wProcessorRevision;
+} SYSTEM_INFO;
+
+
+
+
+
+使用虚拟内存
+
+	分配内存
+		
+		LPVOID VirtualAlloc{
+			LPVOID lpAddress, // 要分配的内存区域的地址
+			DWORD dwSize, // 分配的大小, 一般是"页"倍数
+			DWORD flAllocationType, // 分配的类型 MEM_COMMIT   MEM_RESERVE   MEM_RESET
+			DWORD flProtect // 该内存的初始保护属性
+		};
+
+
+
+	提交内存
+		VirtualAlloc
+	使用内存
+		VirtualFree
+
+
+
+堆内存的特点
+
+	一般小于  1M
+
+
+堆内存的使用
+	创建堆
+		HANDLE WINAPI HeapCreate(
+			DWORD flOptions, //创建标识
+			SIZE_T dwInitialSize, //初始化大小
+			SIZE_T dwMaximumSize );//最大大小
+		
+	分配内存
+		LPVOID HeapAlloc(
+			HANDLE hHeap,//堆句柄
+			DWORD dwFlags, //分配标识
+			SIZE_T dwBytes, //要分配堆的字节数
+		);
+
+		分配标识: 
+			HEAP_GENERATE_EXCEPTIONS
+			HEAP_NO_SERIALIZE
+			HEAP_ZERO_MEMORY
+	使用内存
+		
+	释放内存
+		HeapFree
+	释放堆
+
+
+
+malloc > HeapAlloc > VirtualAlloc
+
+
+
+
+建议: 如果频繁分配和释放内存, 可以考虑使用堆, 只创建堆, 不释放内存, 只释放堆.
+
+
+堆的信息
+	GetProcessHeap  当前
+	GetProcessHeaps
+
+
+堆栈内存
+	一般由系统维护, 1M左右
+	alloca   //windows 从栈上分配内存, 速度快
+
+
+
+
+内存映射文件
+
+	1.创建或打开一个文件
+		HANDLE WINAPI CreateFile(
+			_In_ LPCTSTR lpFileName,
+			_In_ DWORD dwDesiredAccess,
+			_In_ DWORD dwShareMode,
+			_In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+			_In_ DWORD dwCreationDisposition,
+			_In_ DWORD dwFlagsAndAttributes,
+			_In_opt_ HANDLE hTemplateFile
+		);
+
+		
+	2.创建内存映射文件
+		HANDLE WINAPI CreateFileMapping(
+			_In_HANDLE hFile,
+			_In_opt_LPSECURITY_ATTRIBUTES lpAttributes, //安全属性
+			_In_DWORD flProtect, //保护模式
+			_In_DWORD dwMaximumSizeHigh, //大小的高32位
+			_In_DWORD dwMaximumSizeLow,//大小的低32位
+			_In_opt_LPCTSTR lpName); //文件映射内核对象的名称
+	3.映射成内存地址
+		LPVOID WINAPI MapViewOfFile(
+　　			__in HANDLE hFileMappingObject, //文件映射句柄
+　　			__in DWORD dwDesiredAccess,  //访问模式
+　　			__in DWORD dwFileOffsetHigh,  //偏移 高32位
+　　			__in DWORD dwFileOffsetLow,  //偏移  低32位
+　　			__in SIZE_T dwNumberOfBytesToMap  
+　　		);
+	4.使用内存
+	5.卸载映射
+		BOOL WINAPI UnmapViewOfFile(_In_LPCVOID lpBaseAddress);
+	6.关闭内存映射文件
+		//关闭文件
+		CloseHandle(HANDLE hMap);
+	7.关闭文件
+		//关闭文件
+		CloseHandle(HANDLE  hFile);
+
+
+
+
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	

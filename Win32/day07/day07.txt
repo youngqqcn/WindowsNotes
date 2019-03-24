@@ -1,0 +1,593 @@
+一 Windows绘图
+	
+	1.图形绘制
+		1.1 图形绘制的方式
+			获取到绘图句柄 - 设备描述表(DC), 使用相应的绘图API,
+			在设备上绘制图形.
+		
+		1.2 颜色
+			RGB , 每种颜色8位, 共24位颜色 
+			32位颜色: 颜色数量24位颜色, 另外8位表示灰度.
+			16位颜色: 2^16 
+			
+			Win32 下 颜色的定义 COLORREF(dw)
+			
+			COLORREF nColor = RGB(0, 0, 0) //黑色
+			COLORREF nColor = RGB(0xff, 0xff, 0xff) //白色
+			
+			从一个颜色中获取RGB三色:
+				GetRValue() //获取红色的值
+				GetGValue() //获取绿色的值
+				GetBValue() //获取蓝色的值
+				
+		1.3 点
+			COLORREF SetPixel(HDC hdc, int X, int Y, COLORREF crColor)
+			COLORREF GetPixel(HDC hdc, int nXPos, int nYPos)
+			
+			
+			MoveToEx
+			LineTo
+			
+			//通过外切矩形画弧
+			Arc
+			
+			
+			//弧线
+			函数原型:BOOL AngleArc(Hdc hdc, int x,int y,int nRadius,float fStartAngle,float fSweepAngle)
+			参数列表:
+			x,y为扇形圆心
+			nRadius为圆的半径
+			fStartAngle为弧的起点角度
+			fSweepAngle为扇形的角度
+			
+		
+		GDI绘图对象-画笔
+		使用画笔
+			1.创建画笔
+				HPEN CreatePen(int nPenStyle, int nWidth, COLORREF crColor);
+				//用指定的样式、宽度和颜色创建一个画笔
+			2.设置成当前DC可以使用的画笔
+				HGDIOBJ SelectObject(HDC hdc, HGDIOBJ hgdiobj)
+				//hdc：设备上下文环境的句柄。
+				//hgdiobj 被选择的对象的句柄，该指定对象必须由如下的函数创建。
+			3.绘制图形
+			4.从当前DC中取出画笔
+				SelectObject
+			5.销毁画笔(占用资源)
+				DeleteObject
+			
+		GDI绘图对象-画刷
+			1.创建画刷
+			2.设置当前DC使用该画刷
+			3.绘制图形
+			4.获取画刷
+			5.销毁画刷
+		
+		====================================================================
+
+
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+#include "resource.h"
+
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+int g_iDrawType  = 0;
+COLORREF g_iPenColor = RGB(0, 0, 0);
+int g_iPenStyle = PS_DASHDOT;
+COLORREF g_iBurshColor = RGB(0xff, 0xff, 0xff);
+int g_iBrushStyle = 0xffffffff;
+
+void DrawPixel(HDC hDC)
+{
+	COLORREF iColor = RGB(0xff, 0, 0);
+	for (int i = 0; i < 100; i++)
+	{
+		for(int j =0 ; j < 100; j++)
+		{
+			SetPixel(hDC,	i, j, iColor);
+		}
+	}
+	
+}
+
+void GetPixelColor(HDC hDc)
+{
+	COLORREF iColor = GetPixel(hDc, 100, 100);
+
+	int iRed = GetRValue(iColor);
+	int iGreen = GetGValue(iColor);
+	int iBlue = GetBValue(iColor);
+
+	CHAR szText[260] = {0};
+	sprintf(szText, "COLOR=%08X, RED=%d, GREEN=%d, BLUE=%d",
+		iColor, iRed, iGreen, iBlue);
+
+	MessageBox(NULL, szText, "颜色", MB_OK);
+
+}
+
+void DrawLine(HDC hDC)
+{
+	MoveToEx(hDC, 0, 0, NULL);  //调用起始点
+	LineTo(hDC, 500, 500);
+	//MoveToEx(hDC , 500, 0, NULL);
+	LineTo(hDC, 0, 500);
+
+}
+
+void DrawArc(HDC hDC)
+{
+	//逆时针的方式
+	SetArcDirection(hDC, AD_COUNTERCLOCKWISE);
+
+	//通过外切矩形和切割线
+	Arc(hDC, 400, 200, 500, 300, 
+		500, 200, 400, 200);
+
+	//AngleArc(hDC, 200, 200, 100, 60, 90 );
+
+}
+
+
+//绘制多边形
+void DrawPolyLine(HDC hDC)
+{
+#if 0
+	POINT pt[3] = {0};
+	pt[0].x = 100;
+	pt[0].y = 100;
+	pt[1].x = 200;
+	pt[1].y = 200;
+	pt[2].x = 100;
+	pt[2].y = 200;
+	Polyline(hDC, pt, sizeof(pt)/sizeof(pt[0]));
+#endif
+	
+	//与Polyline类似, 只是在绘制Polyline前, 从当前点使用
+	//LineTo绘制直线到Polyline的第一个顶点
+	//PolylineTo = LineTo + Polyline
+	//PolylineTo(hDC, pt, sizeof(pt)/sizeof(pt[0]));
+
+	
+	POINT pt2[7] = {0};
+	pt2[0].x = 100;
+	pt2[0].y = 100;
+	pt2[1].x = 200;
+	pt2[1].y = 100;
+	pt2[2].x = 200;
+	pt2[2].y = 200;
+	pt2[3].x = 300;
+	pt2[3].y = 200;
+	pt2[4].x = 300;
+	pt2[4].y = 300;
+	pt2[5].x = 400;
+	pt2[5].y = 300;
+	pt2[6].x = 400;
+	pt2[6].y = 400;
+	//使用PolyPolyline绘制台阶
+
+	//PolylineTo(hDC, pt2, sizeof(pt2)/sizeof(pt2[0]));
+	//PolyPolyline(hDC, pt2, pt2, 7);
+
+	DWORD iCroup[2] = {3, 4}; //每小组的数量
+	PolyPolyline(hDC, pt2, iCroup, 2); //分组的数量
+}
+
+
+void DrawPolyBizer(HDC hDC)
+{
+	POINT ptBizer[4] = {0};
+
+	//端点1
+	ptBizer[0].x = 100;
+	ptBizer[0].y = 100;
+
+	//控制点1
+	ptBizer[1].x = 150;
+	ptBizer[1].y = 50;
+
+	//控制点2
+	ptBizer[2].x = 300;
+	ptBizer[2].y = 250;
+
+	//端点2
+	ptBizer[3].x = 300;
+	ptBizer[3].y = 100;
+
+	PolyBezier(hDC, ptBizer, 4);
+	MoveToEx(hDC, ptBizer[0].x, ptBizer[0].y, NULL);
+	LineTo(hDC, ptBizer[1].x, ptBizer[1].y);
+	MoveToEx(hDC, ptBizer[3].x, ptBizer[3].y, NULL);
+	LineTo(hDC, ptBizer[2].x , ptBizer[2].y);
+}
+
+void DrawPolyDraw(HDC hDc)
+{
+	POINT pt[4] = {0};
+	
+	//端点1
+	pt[0].x = 100;
+	pt[0].y = 100;
+	
+	//控制点1
+	pt[1].x = 150;
+	pt[1].y = 50;
+	
+	//控制点2
+	pt[2].x = 300;
+	pt[2].y = 250;
+	
+	//端点2
+	pt[3].x = 300;
+	pt[3].y = 100;
+
+	BYTE ptType[4] = {0} ;
+	ptType[0] = PT_MOVETO;
+	ptType[1] = PT_LINETO;
+	ptType[2] = PT_MOVETO;
+	ptType[3] = PT_LINETO;
+	PolyDraw(hDc, pt,  ptType, 4);
+
+	//矩形
+	//Rectangle();
+}
+
+
+void DrawRect(HDC hDc)
+{
+	//直角矩形
+	Rectangle(hDc, 300, 300, 400, 400 );
+
+	/*
+	BOOL RoundRect(HDC hdc, int nLeftRect, 
+				int nTopRect, int nRightRect,
+				int nBottomRect, int nWidth, 
+				int nHeight)；
+	//圆角矩形
+	nLeftRect：指定矩形左上角的X坐标。
+	nTopRect：指定矩形左上角的Y坐标。
+	nRightRect：指定矩形右下角的X坐标。
+	nbottomRect：指定矩形右下角的Y坐标。
+	nWidth：指定用来画圆角的椭圆的宽。
+	nHeight：指定用来画圆角的椭圆的高。
+	*/
+	RoundRect(hDc, 100, 100, 200, 200, 30, 30);
+}
+
+
+//绘制椭圆
+void DrawEllipse(HDC hDC)
+{
+	Ellipse(hDC, 100, 100, 200, 200);
+	Ellipse(hDC, 300, 300, 400, 500);
+}
+
+
+void DrawPie(HDC hDC)
+{
+	/*
+	//BOOL Pie(HDC hdc, int nLeftRect, int nTopRect, int nRightRect, int nBottomRect, int nXRadial1, int nYRadial1, int nXRadial2, int nYRadial2)；
+	hdc：设备环境句柄。
+	nLeftRect：指定限定矩形左上角的X坐标。
+	nTopRect：指定限定矩形左上角的Y坐标。
+	nRigthRect：指定限定矩形右下角的X坐标。
+	nBottomRect：指定限定矩形右下角的Y坐标。
+	nXRadial1：指定第一条半径的端点的X坐标。
+	nYRadial1：指定第一条半径的端点的Y坐标。
+	nXRadial2：指定第二条半径的端点的X坐标。
+	nYRadial2：指定第二条半径的端点的Y坐标。
+	*/
+	
+	Pie(hDC, 100, 100, 300, 300, 50, 10, 100, 40);	
+}
+
+//绘制   弦(弧)
+void DrawChord(HDC hDC)
+{
+	Chord(hDC, 100, 100, 500, 400, 500, 100, 100, 100);
+
+}
+
+
+//多边形
+void DrawPolygon(HDC hDC)
+{
+	POINT pt[4] = {0};
+	
+	//端点1
+	pt[0].x = 100;
+	pt[0].y = 100;
+	
+	//控制点1
+	pt[1].x = 150;
+	pt[1].y = 50;
+	
+	//控制点2
+	pt[2].x = 300;
+	pt[2].y = 250;
+	
+	//端点2
+	pt[3].x = 300;
+	pt[3].y = 500;
+
+	Polygon(hDC, pt, 4 );
+}
+
+
+void OnPaint(HWND hWnd,  UINT uMsg, 
+		  WPARAM wParam, LPARAM lParam)
+{
+	PAINTSTRUCT ps = {0};
+	HDC hDC  = BeginPaint(hWnd, &ps);
+
+	//创建画笔 
+	HPEN hPen = CreatePen(g_iPenStyle, 1, g_iPenColor);
+	//设置画笔到当前DC
+	HPEN hPenOld =(HPEN)SelectObject(hDC, hPen);
+
+
+	
+
+	//HBRUSH hBrush = CreateSolidBrush(g_iBurshColor);
+	//HBRUSH hBrushOld = (HBRUSH)SelectObject(hDC, hBrush);
+
+	//根据画刷样式, 常见不同类型的画刷
+	HBRUSH hBrush = NULL;
+	if(0xffffffff == g_iBrushStyle)
+		hBrush = CreateSolidBrush(g_iBurshColor);
+	else
+		hBrush = CreateHatchBrush(g_iBrushStyle, g_iBurshColor);
+	HBRUSH hBrushOld = (HBRUSH)SelectObject(hDC, hBrush);
+
+	//开始绘制图形
+	switch(g_iDrawType)
+	{
+	case ID_DRAW_POINT:
+		DrawPixel(hDC);
+		break;
+	case ID_GET_POINT:
+		GetPixelColor(hDC);
+		break;
+	case ID_DRAW_LINE:
+		DrawLine(hDC);
+		break;
+	case ID_DRAW_ARC:
+		DrawArc(hDC);
+		break;
+	case ID_DRAW_POLYLINE:
+		DrawPolyLine(hDC);
+		break;
+	case ID_DRAW_POLYBIZER:
+		DrawPolyBizer(hDC);
+		break;
+	case ID_POLYDRAW:
+		DrawPolyDraw(hDC);
+		break;
+	case ID_DRAW_RECT:
+		DrawRect(hDC);
+		break;
+	case ID_DRAW_ELLIPSE:
+		DrawEllipse(hDC);
+		break;
+	case ID_DRAW_PIE:
+		DrawPie(hDC);
+		break;
+	case ID_DRAW_CHORD:
+		DrawChord(hDC);
+		break;
+	case ID_DRAW_POLYGON:
+		DrawPolygon(hDC);
+		break;
+		
+	}
+
+	//取出画笔,删之
+	SelectObject(hDC, hPenOld); // 把原来的画笔放回去
+	DeleteObject(hPen);
+
+	//取出画刷,删之
+	SelectObject(hDC, hBrushOld);
+	DeleteObject(hBrush);
+
+
+	EndPaint(hWnd, &ps);
+}
+
+
+
+
+
+
+
+void OnCommand(HWND hWnd,  UINT uMsg, 
+		  WPARAM wParam, LPARAM lParam)
+{
+	int iCmdID = LOWORD(wParam);
+	
+	switch(iCmdID)
+	{
+	case ID_DRAW_POINT: //绘制点
+	case ID_GET_POINT: //获取点
+	case ID_DRAW_LINE://直线
+	case ID_DRAW_ARC: //绘制弧线
+	case ID_DRAW_POLYLINE:
+	case ID_DRAW_POLYBIZER: //bizer曲线 
+	case ID_POLYDRAW:
+	case ID_DRAW_RECT:
+	case ID_DRAW_ELLIPSE:
+	case ID_DRAW_PIE:
+	case ID_DRAW_CHORD:
+	case ID_DRAW_POLYGON:
+		g_iDrawType = iCmdID;
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case ID_PEN_COLOR_RED: //红色画笔
+		g_iPenColor = RGB(255, 0, 0);
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case ID_PEN_COLOR_BLUE: //蓝色画笔
+		g_iPenColor = RGB(0, 0, 255);
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case ID_PS_DASH:
+		g_iPenStyle = PS_DASH;
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case ID_PS_DOTDASH:
+		g_iPenStyle = PS_DASHDOT;
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case ID_PS_SOLID:
+		g_iPenStyle = PS_SOLID;
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case ID_BRUSH_COLOR_RED:
+		g_iBurshColor = RGB(255, 0, 0);
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case ID_BS_SOLID:
+		g_iBrushStyle = 0xffffffff;
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case ID_BS_DASH:
+		g_iBrushStyle = HS_DIAGCROSS;
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	case ID_EXIT:
+		PostQuitMessage(0);
+		break;
+	}
+
+}
+
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_PAINT:
+		OnPaint(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_COMMAND:
+		OnCommand(hWnd, uMsg, wParam, lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE + 1);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HMENU hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_MENU1));
+	
+
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, hMenu, 
+		g_hInst, NULL);
+	
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+
+
+
+
+		
+		
+		

@@ -1,0 +1,492 @@
+
+
+1，类导出
+
+
+
+#ifndef _MATH_H_
+#define _MATH_H_
+
+
+//export class  by  macro 
+
+#ifdef _DLL_CLASS_DLL_   //this macro was defined in  "project Preprocessor"
+#define DLLCLASS_EXT __declspec(dllexport) 
+#else
+#define DLLCLASS_EXT __declspec(dllimport) 
+#endif //_DLL_CLASS_DLL_
+
+
+class  DLLCLASS_EXT CMath
+{
+public:
+	int  Add(int a, int b);
+};
+
+#endif
+
+
+2。DllMain 函数
+
+   DLL文件入口函数， 当加载动态库和释放动态库时，自动调用
+
+	BOOL WINAPI DllMain(
+		_In_ HINSTANCE hinstDLL, // 指向自身的句柄
+  		_In_ DWORD fdwReason, // 调用原因
+  		_In_ LPVOID lpvReserved // 隐式加载和显式加载
+	);
+
+	DLL_PROCESS_ATTACH、  //进程加载
+	DLL_PROCESS_DETACH、 //进程卸载
+	DLL_THREAD_ATTACH、  //线程加载
+	DLL_THREAD_DETACH。  //线程卸载
+
+
+   
+
+
+kernel32.lib
+user32.lib
+
+
+1.静态库的特点
+	1.1 目标程序的归档
+	1.2 静态库的代码会被嵌入到程序当中
+	1.3 程序执行时不需要被静态库存在
+	
+
+2.静态库的使用
+
+	导入方法1: 设置项目属性
+	导入方法2:  #pragma comment(lib, "../lib/wincpplib.lib")
+
+	
+	C++编译会修改函数名称, C++ 中调用C的lib时,
+	需要加 externd "C"  关键
+	
+	
+	#ifdef __cplusplus
+	extern "C" {
+	#endif 
+			需要导出的C函数
+	#ifdef __cplusplus
+	}
+	#endif
+	
+	
+	
+3.动态库的使用
+	
+	
+	在lib目录下生成的.lib, 并不是静态库, 而是函数映射表
+	存放了动态库的函数的地址.
+	
+	
+	1.与C++的方式导出库函数
+	 __declspec(dllexport) int add(int, int)
+	
+	
+	2.以C语言的方式导出函数:
+	 extern "C" __declspec(dllexport) int add(int, int)
+	
+	3.使用DEF文件导出
+		
+		LIBRARY windll.dll
+		EXPORTS
+			def_mul @1
+		
+		DEF文件不能导出同名函数
+		
+	
+	
+	DLL查找的顺序
+	1.查找当前应用程序的目录
+	2.当前的工作目录
+	3.查找windows system32目录
+	4.查找window system目录
+	5.查找Windows 目录
+	6.查找环境变量PATH指定路径
+	
+	
+	
+	隐式链接
+		导入DLL的lib
+		定义函数原型
+		使用
+	
+	显示链接
+		1.加载动态库   
+			HMODULE WINAPI LoadLibrary( _In_ LPCTSTR lpFileName);
+		2.定义函数原型对应的函数指针
+		3.获取函数地址
+			GetProcAddress      //只能加载 extern "C"方式导出的函数,
+								//不能加载 C++方式导出的函数(C++会改名)
+		4.使用
+		5.释放动态库
+			FreeLibrary
+			
+////////////////////////////////////////////////////////////////
+#include <WINDOWS.H>
+
+typedef int (*ADD)(int , int);
+typedef int (*MUL)(int , int);
+
+
+//显式调用dll
+void UseDll()
+{
+	HMODULE hDll = (HMODULE)LoadLibrary("windll.dll");
+	if(NULL == hDll)
+	{
+		printf("load failed!\n");
+		return;
+	}
+	printf("load successed!\n");
+	
+
+	ADD  fadd = NULL;
+	MUL  fmul = NULL;
+
+	//获取函数地址
+	fadd = (ADD)GetProcAddress(hDll, "c_add");
+	fmul = (MUL)GetProcAddress(hDll, "def_mul");
+
+	if(NULL != fadd )
+	{
+		printf("%d\n", fadd(100, 999));
+	}	
+	if(fmul)
+	{
+		printf("%d\n", fmul(100, 999));
+	}
+
+
+	FreeLibrary(hDll); //释放动态库
+}
+////////////////////////////////////////////////////////////////
+	
+	
+4.动态库的变量
+	4.1 定义全局变量
+	4.2 导出全局变量
+		4.2.1  __declspec(dllexport)
+		4.2.2  DEF文件导出
+	4.3 导入LIB文件
+	
+	
+////////////////////////////////////////////////////////////////
+
+//导出全局变量
+/*extern "C"*/ __declspec(dllexport) int g_iVar = 100;
+
+//////////////////////////////////////////////////////////////////
+#include "stdafx.h"
+
+#pragma  comment(lib, "../lib/DllVar.lib")
+
+//从动态库, 导入全局变量
+/*extern "C"*/ __declspec(dllimport) int g_iVar;
+
+
+
+int main(int argc, char* argv[])
+{
+	printf("Hello World!\n");
+	printf("%d\n", g_iVar);
+	return 0;
+}
+//////////////////////////////////////////////////////////////////
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+1，类导出
+
+
+
+#ifndef _MATH_H_
+#define _MATH_H_
+
+
+//export class  by  macro 
+
+#ifdef _DLL_CLASS_DLL_   //this macro was defined in  "project Preprocessor"
+#define DLLCLASS_EXT __declspec(dllexport) 
+#else
+#define DLLCLASS_EXT __declspec(dllimport) 
+#endif //_DLL_CLASS_DLL_
+
+
+class  DLLCLASS_EXT CMath
+{
+public:
+	int  Add(int a, int b);
+};
+
+#endif
+
+
+2。DllMain 函数
+
+   DLL文件入口函数， 当加载动态库和释放动态库时，自动调用
+
+	BOOL WINAPI DllMain(
+		_In_ HINSTANCE hinstDLL, // 指向自身的句柄
+  		_In_ DWORD fdwReason, // 调用原因
+  		_In_ LPVOID lpvReserved // 隐式加载和显式加载
+	);
+
+	DLL_PROCESS_ATTACH、  //进程加载
+	DLL_PROCESS_DETACH、 //进程卸载
+	DLL_THREAD_ATTACH、  //线程加载
+	DLL_THREAD_DETACH。  //线程卸载
+
+
+   
+
+============================================================
+
+
+
+
+
+
+// LoadLibraryDll.cpp : Defines the entry point for the console application.
+//
+
+//2018-08-28 yqq  男儿志在四方, 心胸宽广, 岂能自怨自艾?
+
+
+#include "stdafx.h"
+#include <WINDOWS.H>
+
+typedef int (*ADD)(int , int);
+typedef int (*MUL)(int , int);
+
+
+//显式调用dll
+void UseDll()
+{
+	HMODULE hDll = (HMODULE)LoadLibrary("windll.dll");
+	if(NULL == hDll)
+	{
+		printf("load failed!\n");
+		return;
+	}
+	printf("load successed!\n");
+	
+
+	ADD  fadd = NULL;
+	MUL  fmul = NULL;
+
+	//获取函数地址
+	fadd = (ADD)GetProcAddress(hDll, "c_add");
+	fmul = (MUL)GetProcAddress(hDll, "def_mul");
+
+	if(NULL != fadd )
+	{
+		printf("%d\n", fadd(100, 999));
+	}	
+	if(fmul)
+	{
+		printf("%d\n", fmul(100, 999));
+	}
+
+
+	FreeLibrary(hDll); //释放动态库
+}
+
+
+
+int main(int argc, char* argv[])
+{
+	UseDll();
+
+
+
+	printf("Hello World!\n");
+	return 0;
+}
+
+========================================================
+
+
+// usedll.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+
+//__declspec(dllimport) int add(int , int);
+
+
+/*1.隐式链接*/
+#pragma comment(lib, "../lib/windll.lib") //导入dll的lib
+int add(int , int); //函数原型
+extern "C" int c_add(int a, int b);
+
+//2.def方式
+int def_mul(int , int);
+
+
+int main(int argc, char* argv[])
+{
+	printf("Hello World!\n");
+	printf("%d\n", add(100, 99));
+	printf("%d\n", c_add(100, 99));
+	printf("%d\n", def_mul(100, 99));
+	return 0;
+}
+
+==============================================================
+
+
+
+/*  
+ * FileName: my_Rundll32.cpp 
+ * Creator: 冷却 
+ * Date: 2009年10月7日 
+ * Comment: 模仿Windows里的一个名为Rundll32.exe的小工具 
+ */  
+
+#include "stdafx.h"
+
+#include <windows.h>   
+#pragma comment(linker, "/subsystem:windows")   
+  
+typedef void (*EntryPoint)(  
+                           HWND hwnd,        // handle to owner window   
+                           HINSTANCE hinst,  // instance handle for the DLL   
+                           LPTSTR lpCmdLine, // string the DLL will parse   
+                           int nCmdShow      // show state   
+                           );  
+  
+int WINAPI WinMain(  
+                   HINSTANCE hInstance,      // handle to current instance   
+                   HINSTANCE hPrevInstance,  // handle to previous instance   
+                   LPSTR lpCmdLine,          // command line   
+                   int nCmdShow              // show state   
+                   )  
+{  
+    if ( strlen(lpCmdLine)==0 )  
+    {  
+        return -1;  
+    }  
+      
+    char* buf=lpCmdLine;  
+    char* tmp=NULL;  
+    bool haveArg=true;  
+      
+    int n,n1;  
+    int len = strlen(buf);  
+      
+    tmp = strchr(buf, ',');  
+    if ( tmp == NULL )  
+    {  
+        return -1;  
+    }  
+    int commaPos = (tmp-buf);  
+      
+    int spacePos;  
+    tmp = strchr(buf, ' ');  
+    if ( tmp == NULL )  
+    {  
+        spacePos = len;  
+        haveArg = false;  
+    }  
+    else  
+    {  
+        spacePos = (tmp-buf);  
+    }  
+      
+    char* dllName=NULL;  
+    char* funName=NULL;  
+    char* arguments=NULL;  
+      
+    dllName = new char[commaPos+1];  
+    funName = new char[spacePos-commaPos];  
+      
+    if ( haveArg )  
+    {  
+        arguments = new char[len-spacePos];  
+    }  
+    else  
+    {  
+        arguments = new char[1];  
+        strcpy(arguments, "");  
+    }  
+      
+    for ( n=0; n<commaPos; n++ )  
+    {  
+        dllName[n] = buf[n];  
+    }  
+    dllName[commaPos]=0;  
+      
+    for ( n1=0,n=(commaPos+1); n<spacePos; n1++,n++ )  
+    {  
+        funName[n1] = buf[n];  
+    }  
+    funName[spacePos-commaPos-1]=0;  
+      
+    if ( haveArg )  
+    {  
+        for ( n1=0,n=spacePos+1; n<len; n1++,n++)  
+        {  
+            arguments[n1] = buf[n];  
+        }  
+        arguments[len-spacePos-1]=0;  
+    }  
+      
+    //这部分为核心部分，其余的均是为了解析参数   
+    HINSTANCE dll_handle = LoadLibrary(dllName);  
+    if ( dll_handle != NULL )  
+    {  
+        EntryPoint my_fun = (EntryPoint)GetProcAddress(dll_handle, funName);  
+        if ( my_fun != NULL )  
+        {  
+            my_fun((HWND)hInstance, dll_handle, arguments, nCmdShow);  
+        }  
+        else  
+        {  
+            MessageBox(0,"丢失条目！",0,0);  
+        }  
+    }  
+    else  
+    {  
+        MessageBox(0,"找不到指定的模块！",0,0);  
+    }  
+    FreeLibrary(dll_handle);  
+    //   
+      
+    delete[] dllName;  
+    delete[] funName;  
+      
+    if ( haveArg )  
+    {  
+        delete[] arguments;  
+    }  
+      
+    return 0;  
+}  
+
+
+
+
+
+
+
+
+
+
+

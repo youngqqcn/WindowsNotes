@@ -1,0 +1,152 @@
+// WinMDI.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+
+
+HWND g_hMDIClient = NULL;
+HINSTANCE g_hInst = NULL;
+
+
+
+LRESULT CALLBACK MainProc(HWND hWnd, UINT uMsg, 
+						  WPARAM wParam, LPARAM lPrama)
+{
+	switch(uMsg)
+	{
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+		
+	default:
+		break;
+	}
+
+
+	//return DefWindowProc(hWnd, uMsg, wParam, lPrama);
+	return DefFrameProc(hWnd, g_hMDIClient, uMsg, wParam, lPrama);
+}
+
+LRESULT CALLBACK ChildProc(HWND hWnd, UINT uMsg, 
+						  WPARAM wParam, LPARAM lPrama)
+{
+	
+	//return DefWindowProc(hWnd, uMsg, wParam, lPrama);
+	return DefFrameProc(hWnd, g_hMDIClient, uMsg, wParam, lPrama);
+}
+
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName, 
+				 WNDPROC Proc,
+				 int nBrush)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.lpfnWndProc = MainProc;
+	wce.hInstance = g_hInst;
+	wce.hIcon = NULL;
+	wce.hIcon = NULL;
+	wce.hbrBackground = HBRUSH(nBrush);
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.hIconSm = NULL;
+	
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+		return TRUE;
+	return FALSE;
+}
+
+
+HWND CreateMainWnd(LPSTR pszClassName)
+{
+
+	HWND hWnd = CreateWindowEx(
+		0, pszClassName, "MainWnd", WS_OVERLAPPEDWINDOW, 
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
+	return hWnd;
+}
+
+HWND CreateMDIClient(HWND hParent)
+{
+	CLIENTCREATESTRUCT cs = {0};
+	cs.idFirstChild = 100;
+	HWND hWnd = CreateWindowEx(
+		0, "MDICLIENT", "MainWnd", WS_CHILD|WS_VISIBLE, 
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, hParent, NULL, g_hInst, &cs);
+	return hWnd;
+}
+
+
+HWND CreateChildWnd(LPSTR pszClassName, HWND hParent)
+{
+
+	HWND hWnd = CreateWindowEx(
+		WS_EX_MDICHILD, pszClassName, "MainWnd", WS_CHILD|WS_VISIBLE, 
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, hParent, NULL, g_hInst, NULL);
+	return hWnd;
+
+}
+
+
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+void Message()
+{
+
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+		DispatchMessage(&msg);
+	}
+}
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+ 	// TODO: Place code here.
+	g_hInst = hInstance;
+	RegisterWnd("MainWnd", MainProc, COLOR_BTNFACE + 1);
+	RegisterWnd("ChildWnd", ChildProc, COLOR_WINDOW);
+
+	HWND hMain =	CreateMainWnd("MainWnd");
+
+
+	//1.创建MDICLIENT窗口
+	g_hMDIClient = CreateMDIClient(hMain);
+	MoveWindow(g_hMDIClient, 0, 0, 500, 500, TRUE);
+	
+	//2.创建MDI子窗口
+	HWND hChild1 = CreateChildWnd("ChildWnd", g_hMDIClient);
+	//MoveWindow(hChild1, 0, 0, 200, 300, TRUE);
+	HWND hChild2 = CreateChildWnd("ChildWnd", g_hMDIClient);
+	//MoveWindow(hChild1, 0, 0, 200, 300, TRUE);
+	HWND hChild3 = CreateChildWnd("ChildWnd", g_hMDIClient);
+	//MoveWindow(hChild1, 0, 0, 200, 300, TRUE);
+
+	DisplayWnd(hMain);
+	Message();
+
+	return 0;
+}
+
+
+

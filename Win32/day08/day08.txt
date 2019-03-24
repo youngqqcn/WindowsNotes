@@ -1,0 +1,742 @@
+位图
+	
+	光栅图-图像点阵的保存
+	矢量图-绘图命令的保存
+	
+	
+位图使用
+	1.加载位图
+		LoadBitmap
+	2.创建放置位图的DC
+		CreateCompatibleDC
+		创建一个和指定DC完全一致的DC
+	3.将位图放入创建的DC中
+		SelectObject
+	4.绘制位图到当前DC中
+		BOOL BitBlt(  _In_  HDC hdcDest,  _In_  int nXDest,  _In_  int nYDest,  _In_  int nWidth,  _In_  int nHeight,  _In_  HDC hdcSrc,  _In_  int nXSrc,  _In_  int nYSrc,  _In_  DWORD dwRop);
+			hDestDC：指向目标设备环境的句柄。
+			x：指定目标矩形区域左上角的X轴逻辑坐标。
+			y：指定目标矩形区域左上角的Y轴逻辑坐标。
+			nWidth：指定源在目标矩形区域的逻辑宽度。
+			nHeight：指定源在目标矩形区域的逻辑高度。
+			hSrcDC：指向源设备环境的句柄。
+			xSrc：指定源矩形区域左上角的X轴逻辑坐标。
+			ySrc：指定源矩形区域左上角的Y轴逻辑坐标。
+			dwRop：指定光栅操作代码。这些代码将定义源矩形区域的颜色数据，如何与目标矩形区域的颜色数据组合以完成最后的颜色。
+			
+			
+			
+			BOOL StretchBlt(HDC hdcDest, int nXOriginDest, int nYOriginDest, int nWidthDest, int nHeightDest, HDC hdcSrc, int nXOriginSrc, int nYOriginSrc, int nWidthSrc, int nHeightSrc, DWORD dwRop)；
+			
+			int GetObject(HGDIOBJ hgdiobj, int cbBuffer, LPVOID lpvObject)；
+			
+				typedef struct tagBITMAPINFOHEADER{
+						DWORD      biSize;
+						LONG       biWidth;
+						LONG       biHeight;
+						WORD       biPlanes;
+						WORD       biBitCount;
+						DWORD      biCompression;
+						DWORD      biSizeImage;
+						LONG       biXPelsPerMeter;
+						LONG       biYPelsPerMeter;
+						DWORD      biClrUsed;
+						DWORD      biClrImportant;
+				} BITMAPINFOHEADER
+			
+	5.取出位图
+		SelectObject
+	6.删除创建的DC
+		DeletedDC
+	7.删除位图
+		DeleteObject
+		
+		
+		
+		
+		
+坐标系和映射模式
+	坐标系 
+		设备坐标系
+			X轴: 左-->右
+			Y轴: 上-->下
+			
+			屏幕坐标:屏幕左上角为(0, 0)点
+			窗口坐标系: 窗口最外边框的左上角为(0,0)点
+			客户区坐标系: 窗口内的客户区的左上角(0, 0)点
+		逻辑坐标系
+			以逻辑单位定义坐标, 绘图过程中使用的坐标基本是逻辑坐标.
+			
+	映射模式
+		
+		逻辑坐标系和设备坐标的映射关系
+		
+		MM_TEXT-默认的映射方式, 逻辑坐标系和设备坐标一直
+		MM_LOMETRIC -0.1MM , X方式一致, Y方向向上
+		MM_HIMETRIC - 0.01MM , X方向向右, Y方向向上
+		MM_TWIPS - 1/1440in , X方向向右, Y方向向上
+		MM_ISOTROPIC  - 可以指定逻辑单位, 也可以指定XY正方向, X轴单位 == Y轴单位
+		MM_ANISOTROPIC - 可以指定逻辑单位, 也可以指定XY正方向, X轴单位 != Y轴单位
+		
+		
+		
+	使用映射模式:
+		1.设置映射模式
+			int SetMapMode(HDC hdc, int fnMapMode) //新的映射方式
+		2.绘图
+			
+		3.恢复旧映射模式
+			SetMapMode(hdc, iOldMap)
+		
+		
+		BOOL SetViewportExtEx(HDC hdc, int nXExtent, int nYExtent, LPSIZE lpSize)；
+			hdc：指向设备描述表的句柄。
+			nXExtent：指定观察口以设备单位为单位的水平轴的范围。
+			nYExent：指定观察口以设备单位为单位的垂直轴的范围。
+			lpSize：指向Size结构的指针，先前的设备单位为单位的视口范围存放在此结构中，如lpSize值为NULL，则什么也没返回。
+		BOOL SetWindowExtEx( __in HDC hdc, __in int nXExtent, __in int nYExtent, __out LPSIZE lpSize);
+			hdc 设备环境句柄。
+			nXExtent 以逻辑单位给出的窗口的水平范围
+			nYExtent 以逻辑单位给出的窗口的垂直范围
+			lpSize[输出] 一个指向SIZE结构的指针，该结构保存了先前的窗口的范围，如果lpSize为NULL，那么不返回值
+		
+		SetViewportExtEx 和 SetWindowExtEx函数的单位数量的比例关系,
+		就是设备单位和逻辑单位之间的比例关系, 可以使用单位的正负号, 
+		确定逻辑坐标系中X和Y轴的正方向.
+				SetViewportExtEx(hDC, 6, 6, NULL); //设备坐标, 像素
+				SetWindowExtEx(hDC, 5, -5, NULL);//逻辑坐标
+		
+		
+		
+	坐标原点:
+		视口坐标系:逻辑坐标系
+		窗口坐标系:设备坐标系 
+		
+		窗口坐标系和视口坐标系原点重合, 也可以修改.
+		
+		SetViewportOrgEx
+		SetWindowOrgEx
+		
+	
+	
+	SetTextColor  //设置字体颜色 
+	SetBkColor //设置文字背景颜色
+	SetBkMode //设置文字背景模式
+	
+	
+	
+	字体的使用
+		1.创建字体
+			HFONT CreateFont(
+				int nHeight, // logical height of font height
+				int nWidth, // logical average character width
+				int nEscapement, // angle of escapement
+				int nOrientation, // base-line orientation angle
+				int fnWeight, // font weight
+				DWORD fdwItalic, // italic attribute flag
+				DWORD fdwUnderline, // underline attribute flag
+				DWORD fdwStrikeOut, // strikeout attribute flag
+				DWORD fdwCharSet, // character set identifier
+				DWORD fdwOutputPrecision, // output precision
+				DWORD fdwClipPrecision, // clipping precision
+				DWORD fdwQuality, // output quality
+				DWORD fdwPitchAndFamily, // pitch and family
+				LPCTSTR lpszFace // pointer to typeface name string
+				);
+		2.设置字体
+		3.绘图
+		4.取出字体
+		5.删除字体
+	
+对话框
+	1.对话框分类
+		无模式对话框
+			对话框显示后, 不影响其他的窗口使用
+		有模式对话框
+			对话框显示后, 其他的窗口禁止输入操作
+	
+	2.对话框的基本使用方式
+		2.1 对话框的窗口处理函数
+		2.2 注册窗口(可选)
+		2.3 创建对话框
+		2.4 关闭对话框
+		
+		
+	3.对话框资源
+	
+	4.有模式对话框的使用
+		4.1 添加对话框资源
+		4.2 定义对话框的处理函数
+			BOOL CALLBACK SettingDlgProc(
+					HWND hWnd, 
+					UINT uMsg, 
+					WPARAM wParam, 
+					LPARAM lParam)
+		4.3 创建对话框
+			int DialogBox(
+				HINSTANCE hInstance,//handle to application instance
+				LPCTSTR lpTemplate,//identifies dialogbox template
+				HWND hWndParent,//handle toowner window
+				DLGPROC lpDialogFunc//pointer to dialogbox procedure
+				);
+		4.4 关闭对话框 
+		
+	=======================================================================
+
+================================WinBmp=============================
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+
+#include "resource.h"
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+
+void OnCommand(HWND hWnd, UINT uMsg, 
+			 WPARAM wParam, LPARAM lParam)
+{
+	int iCmdID = LOWORD(wParam);
+	
+	switch(iCmdID)
+	{
+	case ID_EXIT:
+		PostQuitMessage(0);
+		break;
+	}
+}
+
+void  DrawBmp(HDC hDC)
+{
+	//加载位图资源
+	HBITMAP hBitmap = LoadBitmap(g_hInst, MAKEINTRESOURCE(IDB_BMP1));
+
+	//创建放置位图的DC
+	HDC hDcBmp = CreateCompatibleDC(hDC);
+
+	//将位图放入hBmpDC
+	HBITMAP hOldBmp = (HBITMAP)SelectObject(hDcBmp, hBitmap);
+	
+	//绘制位图
+	BitBlt(hDC, 100, 100, 48, 48, hDcBmp, 0, 0, SRCCOPY);
+	//StretchBlt(hDC, 200, 100, 300, 300, hDcBmp, 24,24, 24, 24, SRCCOPY);
+	
+
+	//获取位图信息, 并绘制
+	BITMAP bmpInfo;
+	GetObject(hBitmap,  sizeof(BITMAP), &bmpInfo );
+	StretchBlt(hDC, 200, 100, bmpInfo.bmWidth, bmpInfo.bmHeight, 
+				hDcBmp, 0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight, 
+				SRCCOPY);
+		
+	
+	//取出位图
+	SelectObject(hDcBmp, hOldBmp);
+	
+	//删除DC
+	DeleteDC(hDcBmp);
+
+	//删除位图
+	DeleteObject(hDcBmp);
+}
+
+
+
+void OnPaint(HWND hWnd, UINT uMsg, 
+			 WPARAM wParam, LPARAM lParam)
+{
+	PAINTSTRUCT ps ={0};
+	HDC	hDC = BeginPaint(hWnd, &ps);
+
+	//绘制
+	DrawBmp(hDC);
+
+
+	EndPaint(hWnd, &ps);
+}
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_PAINT:
+		OnPaint(hWnd, uMsg, wParam,lParam);
+		break;
+
+		
+	case WM_COMMAND:
+		OnCommand(hWnd, uMsg, wParam,lParam);
+		break;
+
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+
+	HMENU hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_MAIN));
+
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, hMenu, 
+		g_hInst, NULL);
+
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+===================================================================
+
+
+
+
+
+==============================WinText====================================
+
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+
+void OnPaint(HWND hWnd, UINT uMsg, 
+		WPARAM wParam, 	LPARAM lParam)
+{
+	PAINTSTRUCT ps = {0};
+	HDC hDC = BeginPaint(hWnd, &ps);
+
+
+	//修改文本的颜色
+	COLORREF iOldTextColor = SetTextColor(hDC, RGB(255, 0, 0));
+	//设置文字的背景颜色
+	COLORREF iOldBkColor = SetBkColor(hDC, RGB(0, 255, 0));
+
+	//创建字体
+	HFONT hFont = CreateFont(50, 50, 20, 0, 0, 
+							FALSE, FALSE, FALSE, 
+							DEFAULT_CHARSET, 0, 0, 0, 0, "宋体");
+
+	//将字体设置到DC中
+	HFONT hOldFont = (HFONT)SelectObject(hDC, hFont);
+
+	//绘制文字
+	CHAR szText[280] = "Hello 世界 Text";
+	TextOut(hDC, 100, 100, szText, strlen(szText));
+
+	RECT rect = {0};
+	rect.left = 100;
+	rect.top = 120;
+	rect.right = 200;
+	rect.bottom = 200;
+	Rectangle(hDC, rect.left, rect.top, rect.right, rect.bottom);
+	DrawText(hDC, szText, strlen(szText), &rect, DT_CENTER);
+
+
+
+	//设置文字背景模式
+	SetBkMode(hDC, TRANSPARENT);
+
+	INT iText[10] = {30};
+	for (int i = 0 ; i < 10; i++)
+		iText[i] = 10;
+	
+	ExtTextOut(hDC, 150, 300, ETO_OPAQUE, NULL, 
+				szText, strlen(szText), iText);
+
+
+	EndPaint(hWnd, &ps);
+}
+
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_PAINT:
+		OnPaint(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, 
+		g_hInst, NULL);
+
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+=====================================================
+
+
+
+
+============================WinMap===============
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+
+
+void OnPaint(HWND hWnd, UINT uMsg, 
+			 WPARAM wParam, LPARAM lParam)
+{
+	PAINTSTRUCT ps = {0};
+	HDC hDC = BeginPaint(hWnd, &ps);
+	
+	int iOldMap = SetMapMode(hDC, MM_ISOTROPIC);
+	SetViewportExtEx(hDC, 6, 6, NULL); //设备坐标, 像素
+	SetWindowExtEx(hDC, 5, 5, NULL);//逻辑坐标
+	SetWindowOrgEx(hDC, 100 , 100, NULL);
+	Rectangle(hDC, 50, 50, 300, 300);
+	
+	SetMapMode(hDC, iOldMap);
+	EndPaint(hWnd, &ps);
+}
+
+
+#if 0
+void OnPaint(HWND hWnd, UINT uMsg, 
+		WPARAM wParam, LPARAM lParam)
+{
+	PAINTSTRUCT ps = {0};
+	HDC hDC = BeginPaint(hWnd, &ps);
+
+	Rectangle(hDC, 100, 100, 200, 200);
+
+	//设置新映射模式
+	//int iOldMap = SetMapMode(hDC, MM_LOMETRIC);
+	int iOldMap = SetMapMode(hDC, MM_LOMETRIC);
+
+	//绘图
+	Rectangle(hDC, 100, -100, 200, -200);
+	SetMapMode(hDC, iOldMap);
+
+
+	//绘图
+	iOldMap = SetMapMode(hDC, MM_LOENGLISH);
+	Rectangle(hDC, 100, 100, 200, 200);
+	SetMapMode(hDC, iOldMap);
+
+	EndPaint(hWnd, &ps);
+}
+#endif
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_PAINT:
+		OnPaint(hWnd, uMsg, wParam,lParam);
+		break;
+
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, 
+		g_hInst, NULL);
+	
+
+
+	
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+==============================================
+
+

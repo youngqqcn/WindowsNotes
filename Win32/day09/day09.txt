@@ -1,0 +1,1018 @@
+1.无模式对话框的使用
+		4.1 添加对话框资源
+		4.2 定义对话框的处理函数
+			BOOL CALLBACK DialogProc(
+					HWND hWnd, 
+					UINT uMsg, 
+					WPARAM wParam, 
+					LPARAM lParam)
+		4.3 创建对话框
+			HWND CreateDialog（
+				HINSTANCE hlnstance, //应用程序实例句柄
+				LPCTSTR lpTemplate, //对话框的资源ID
+				HWND hWndParent, //父窗口
+				DLGPROC IpDialogFunc) //对话框的处理函数
+				//返回值: 创建好的对话框窗口句柄
+		4.4 显示对话框
+			ShowWindow
+		4.4 关闭对话框 
+			EndDialog
+			
+	
+	WM_CREATE是所有窗口都能响应的消息，表明本窗口已经创建完毕
+	（可以安全的使用这个窗口了，例如在它上面画控件等）。
+	在响应WM_CREATE消息响应函数的时候，对话框及子控件还未创建完成，
+	亦是说只是通知系统说要开始创建窗口啦，这个消息响应完之后，
+	对话框和子控件才开始创建。因此在此消息响应函数中无法对控件进行
+	修改和初始化。
+    
+    WM_INITDIALOG消息是对话框才能收到的消息，表明对话框及其所有子控
+	件都创建完毕了。这个状态肯定是在调用显示对话框的函数之前，因此可以
+	在WM_INITDIALOG消息响应函数中添加对编辑框控件的初始化和修改。
+	
+	WM_INITDIALOG 消息, 用途类似WM_CREATE消息可以在对话框创建完成后,
+	进行数据初始化, 它与WM_CREATE
+	
+	
+	WM_INITDIALOG
+		wParam -  当前
+		lParam    
+	
+	
+子控件
+	
+	都可使用CreateWindow/CreateWindowEx创建, 并获取控件HWND, 
+	创建是每个子控件都有相应的ID号, ID号不能重复.
+	
+	子控件和父窗口(一般窗口或者对话框)的交互, 都是通过消息完成.
+	如果子窗口状态发生变化, 子窗口会向父窗口发送相应的消息.一般
+	父窗口会使用SendMessage函数向子窗口发送消息.
+	
+	父窗口响应子窗口的消息, 一般都在WM_COMMAND中进行处理.
+	
+	
+	
+静态框
+	静态库创建
+		窗口类的名称 - STATIC  用于显示文字或图片.
+		
+		文本静态库 - 创建时使用SS_SIMPLE风格即可
+		ICON静态框 - 创建静态框使用SS_ICON风格
+	
+	静态框的命令响应
+		WM_COMMAND
+				/* 
+		WM_COMMAND消息中有两个参 数，wparam、lparam，定义如下
+			wParam 高两个字节   命令ID
+			wParam 低两字节   静态框的窗口ID
+
+			lParam 发送命令消息的子窗体句柄。
+	*/
+	
+	静态框的消息
+		GetDlgItem  从窗口中获取包含指定ID的子控件的窗口句柄
+	
+		STM_GETICON
+		STM_CETIMAGE
+		STM_SETICON
+		STM_SETIMAGE
+	
+	
+按钮
+	按钮的分类
+		根据创建按钮时的风格:
+			下压式按钮  PUSH BUTTON
+				正常下压式按钮 BS_PUSHBUTTON
+				三态下压式按钮 BS_3SSTATE/BS_AUTO3STATE
+			分组式按钮
+				BS_GROUPBOX
+			多选CheckBox
+				BS_CHECKBOX/BS_AUTOCHECKBOX
+			单选 Radio Box
+				BS_RADIOBUTTON/BS_AUTORADIOBUTTON
+			
+	
+	使用下压式按钮
+		创建按钮
+		
+	
+	
+	
+	checkbox
+		BS_AUTOCHECKBOX : 选择状态由系统自动维护
+		BS_CHECKBOX : 选择状态, 有自己维护
+		
+	命令响应
+		BN_CLICKED 通过WM_COMMAND消息
+	通知消息
+		BM_GETCHECK 获取当前按钮被选择的状态
+		BM_SETCHECK 设置当前按钮被选择的状态
+			 wParam 用于设置状态标识
+				BST_CHECKED 或 BST_UNCHECKED
+	
+	单选按钮 RadioBox
+		BS_RADIOBUTTON/BS_AUTORADIOBUTTON
+		新建一个分组 WS_GROUP
+	
+	
+	
+	
+文本编辑框
+	
+	文本编辑框种类
+		1.单行文本框  默认样式
+		2.多行文本框 ES_MULTILINE
+		3.密码文本框 ES_PASSWORD
+	
+	使用文本编辑框
+		
+		
+		主窗口的客户区部分大小改变时，我们的应用程序将接收到 WM_SIZE 消息。
+		当然该窗口第一次显示时，我们也将接收到该消息。我们应该把缩放编辑控
+		件的动作放到此处。我们要把编辑控件变成和我们的窗口客户区一样大，
+		所以先得要得到父窗口客户区的大小。这些值包含在参数 lParam 中， 
+		lParam 的高字部分是客户区的高，低字部分是客户区的宽。然后我们调用 
+		MoveWindow 函数来重新调整编辑控件的大小，该函数不仅能够移动窗口的位置，
+		而且能够改变窗口的大小。
+	
+	WM_COPY
+	WM_PASTE 
+	WM_CUT
+	WM_SETTEXT
+	WM_GETTEXT
+	WM_GETTEXTLEN
+	
+	SetWindowText
+	GetWindowText/GetWindowText
+	
+	
+	
+	
+	=========================================================================
+
+===================================WinButton========================
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+void OnCreate(HWND hWnd,UINT uMsg, 
+			  WPARAM wParam, LPARAM lParam)
+{
+	CreateWindow("BUTTON", "PushButton", WS_CHILD | WS_VISIBLE ,
+		50, 50, 100, 50, hWnd, (HMENU)1001, g_hInst, NULL);
+
+	//三态按钮
+	CreateWindow("BUTTON", "AUTO3STATE", WS_CHILD | WS_VISIBLE | BS_AUTO3STATE | BS_PUSHLIKE ,
+		150, 150, 100, 50, hWnd, (HMENU)2001, g_hInst, NULL);
+
+	//分组按钮(分组框), 一般用于功能分区
+	CreateWindow("BUTTON", "GroupBox", WS_CHILD|WS_VISIBLE|BS_GROUPBOX, 
+				200, 200, 100, 50, hWnd, (HMENU)3001, g_hInst, NULL);
+
+
+	CreateWindow("BUTTON", "选项1", WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX, 
+				300, 300, 100, 20, hWnd, (HMENU)4001, g_hInst, NULL);
+
+	CreateWindow("BUTTON", "选项2", WS_CHILD|WS_VISIBLE|BS_CHECKBOX, 
+				300, 320, 100, 20, hWnd, (HMENU)4002, g_hInst, NULL);
+
+	//单选按钮
+	CreateWindow("BUTTON", "选项1", WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON | WS_GROUP/*新建一个分组*/, 
+				400, 400, 100, 20, hWnd, (HMENU)5001, g_hInst, NULL);
+	CreateWindow("BUTTON", "选项2", WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON, 
+				400, 420, 100, 20, hWnd, (HMENU)5002, g_hInst, NULL);
+	CreateWindow("BUTTON", "选项3", WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON |WS_GROUP, 
+				400, 440, 100, 20, hWnd, (HMENU)6003, g_hInst, NULL);
+	CreateWindow("BUTTON", "选项4", WS_CHILD|WS_VISIBLE|BS_AUTORADIOBUTTON, 
+				400, 460, 100, 20, hWnd, (HMENU)6004, g_hInst, NULL);
+
+
+	
+
+
+
+	
+}
+
+
+void OnCommand(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	int iNotifyCode = HIWORD(wParam); //命令ID
+	int iEvnetID = LOWORD(wParam); //控件ID
+
+	switch(iEvnetID)
+	{
+	case 1001:
+	case 2001:
+		{
+			switch(iNotifyCode)
+			{
+			case BN_CLICKED:
+				MessageBox(NULL, "Hello PushButton", "WinButton", MB_OK);
+				break;
+			}
+		}
+		break;
+	case  4002:
+		//HWND hBtnWnd = GetDlgItem(hWnd, 4002); //ok
+		HWND hBtnWnd = (HWND)lParam; //ok
+		{
+			switch(iNotifyCode)
+			{
+			case BN_CLICKED:
+				LRESULT iCheck = SendMessage(hBtnWnd, BM_GETCHECK, wParam, lParam);
+				if(BST_CHECKED & iCheck)
+					SendMessage(hBtnWnd, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+				else
+					SendMessage(hBtnWnd, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+				break;
+			}
+		}
+		break;
+
+	}
+}
+
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_CREATE:
+		OnCreate(hWnd, uMsg, wParam,lParam);
+		break;
+
+	case WM_COMMAND:
+		OnCommand(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, 
+		g_hInst, NULL);
+
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	//NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+==================================================================
+
+=============================WinEdit=========================
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+
+#include "resource.h"
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+HWND g_hEdit = NULL;
+
+void OnSave(HWND hWnd)
+{
+	//获取文字长度
+	LRESULT iTextLength = SendMessage(g_hEdit, WM_GETTEXTLENGTH, 0, 0);
+
+	//获取文字内容
+	CHAR *pszBuf = (CHAR *)malloc(iTextLength + 1);
+	memset(pszBuf, 0,  iTextLength+1);
+
+	//GetWindowText(g_hEdit, );
+	SendMessage(g_hEdit, WM_GETTEXT, (WPARAM)iTextLength+1, (LPARAM)pszBuf);
+	
+	//保存文件
+	FILE *fp = fopen("test.txt", "w");
+	if(NULL == fp)
+	{
+		MessageBox(NULL, "create file err", "tip", MB_OK);
+	}
+	fwrite(pszBuf, iTextLength , 1, fp);
+	
+	if(fp)
+	{
+		fclose(fp);
+		fp = NULL;
+	}
+
+	if(pszBuf)
+	{
+		free(pszBuf);
+		pszBuf = NULL;
+	}
+}
+
+void OnOpen(HWND hWnd)
+{
+	//保存文件
+	FILE *fp = fopen("test.txt", "r");
+	if(NULL == fp)
+	{
+		MessageBox(NULL, "create file err", "tip", MB_OK);
+	}
+	
+	fseek(fp, 0, SEEK_END);
+	long iFileLen = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
+	CHAR *pszBuf = (CHAR *)malloc(iFileLen + 1);
+	memset(pszBuf, 0, iFileLen + 1);
+
+	fread(pszBuf, iFileLen, 1, fp);
+
+	//设置编辑框文本
+	SendMessage(g_hEdit, WM_SETTEXT, 0, (LPARAM)pszBuf);
+	
+	if(fp)
+	{
+		fclose(fp);
+		fp = NULL;
+	}
+	if(pszBuf)
+	{
+		free(pszBuf);
+		pszBuf = NULL;
+	}
+
+}
+
+
+
+void OnCommand(HWND hWnd, UINT uMsg, 
+	  WPARAM wParam, LPARAM lParam)
+{
+	INT iNotifyCode = HIWORD(wParam); //控件发来的 消息
+	INT iEventID = LOWORD(wParam); //命令ID, 事件ID
+
+	switch(iEventID)
+	{
+	case 1001:
+		{
+			switch(iNotifyCode)
+			{
+			case EN_CHANGE: //当编辑框发生变化时的消息
+				//MessageBox(NULL, "EN_CHANGE", "WinEdit", MB_OK);
+				break;
+			}
+		}
+		break;
+	case ID_SELALL:
+		SendMessage(g_hEdit, EM_SETSEL, 0, -1);
+		break;
+	case ID_COPY:
+		SendMessage(g_hEdit, WM_COPY, 0, 0);
+		break;
+	case ID_PASTE:
+		SendMessage(g_hEdit, WM_PASTE, 0, 0);
+		break;
+	case ID_EXIT:
+		PostQuitMessage(0);
+		break;
+	case ID_SAVE:
+		OnSave(hWnd);
+		break;
+	case ID_OPEN:
+		OnOpen(hWnd);
+		break;
+	}
+
+}
+
+void OnCreate(HWND hWnd, UINT uMsg, 
+			 WPARAM wParam, LPARAM lParam)
+{
+	g_hEdit =	CreateWindow("EDIT", "Hello Edit", 
+			WS_CHILD |WS_VISIBLE | ES_AUTOVSCROLL
+			| WS_HSCROLL|ES_MULTILINE | WS_VSCROLL, 
+			0, 0, 100, 200, hWnd, 
+			(HMENU)1001, g_hInst, 0);
+
+
+}
+
+void OnSize(HWND hWnd,UINT uMsg, 
+			WPARAM wParam, 	LPARAM lParam)
+{
+	INT iWidth = LOWORD(lParam);
+	INT iHeight = HIWORD(lParam);
+
+	if(g_hEdit)
+	{
+		MoveWindow(g_hEdit, 0, 0, iWidth, iHeight, TRUE);
+	}
+}
+
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_SIZE: //当窗口第一次显示  或者  窗口的大小发生变化时
+		OnSize(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_CREATE:
+		OnCreate(hWnd, uMsg, wParam,lParam);
+	case WM_COMMAND:
+		OnCommand(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_ICON1));
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HMENU hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_MAIN));
+
+	HWND hWnd = CreateWindowEx(WS_EX_CLIENTEDGE, pszClassName, "我的记事本"
+		, WS_OVERLAPPEDWINDOW  , CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, hMenu, 
+		g_hInst, NULL);
+
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	//NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+===============================================================
+
+
+
+===========================WinModelessDlg=======================
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+
+#include "resource.h"
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+
+
+
+
+BOOL CALLBACK  FindDlgProc(HWND hWnd,UINT uMsg, 
+			   WPARAM wParam, LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_CREATE:
+		MessageBox(NULL, "WM_CREATE", "WinDlg", MB_OK);
+		break;
+	case WM_INITDIALOG:
+		MessageBox(NULL, "WM_INITDIALOG", "WinDlg", MB_OK);
+		break;
+	case WM_SYSCOMMAND:
+		{
+			switch(wParam)
+			{
+			case SC_CLOSE:
+				EndDialog(hWnd, 0);
+				break;
+			}
+		}
+		break;
+	}
+	return 0;
+}
+
+
+void Find(HWND hWnd)
+{
+	HWND hDlg = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_FIND), hWnd, 
+		FindDlgProc);
+	ShowWindow(hDlg, SW_SHOW);
+	UpdateWindow(hDlg);
+}
+
+void OnCommand(HWND hWnd,UINT uMsg, 
+			   WPARAM wParam, LPARAM lParam)
+{
+	INT iCmdID = LOWORD(wParam);
+	switch(iCmdID)
+	{
+		
+	case ID_FIND:
+		Find(hWnd);
+		break;
+	case ID_EXIT:
+		//PostMessage(hWnd, WM_QUIT, uMsg, wParam, lParam);
+		PostQuitMessage(0);
+		break;
+	}
+}
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_COMMAND:
+		OnCommand(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HMENU hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_MAIN));
+
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, hMenu, 
+		g_hInst, NULL);
+
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	//NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+=====================================================
+
+================================WinStatic=====================================
+
+#include "stdafx.h"
+#include <STDIO.H>
+#include <STDLIB.H>
+#include <string.h>
+#include "resource.h"
+
+
+HINSTANCE g_hInst = NULL;
+HANDLE g_hStdOut = NULL;
+BOOL g_bool = FALSE;
+
+void OnCreate(HWND hWnd, 
+			  UINT uMsg, 
+			  WPARAM wParam, 
+				LPARAM lParam)
+{
+
+	CreateWindow("STATIC", "你好 Static", 
+				WS_CHILD | WS_VISIBLE | SS_CENTER|SS_SIMPLE | SS_GRAYFRAME | SS_SUNKEN | SS_NOTIFY,
+				50, 50, 100, 100, hWnd, (HMENU)1001, g_hInst, NULL);
+
+
+	//在静态框 显示图标
+	CreateWindow("STATIC", "#101", WS_CHILD|WS_VISIBLE|SS_ICON|SS_NOTIFY,
+				200, 50, 100, 100, hWnd, (HMENU)1002, 
+				g_hInst, NULL);
+}
+
+
+void OnCommand(HWND hWnd, 
+				 UINT uMsg, 
+				 WPARAM wParam, 
+				LPARAM lParam)
+{
+	/*
+	WM_COMMAND消息中有两个参 数，wparam、lparam，定义如下
+		wParam 高两个字节   命令ID
+		wParam 低两字节   静态框的窗口ID
+
+		lParam 发送命令消息的子窗体句柄。
+	*/		
+
+	
+	int iCmdID = HIWORD(wParam); //
+	int iCtrlID = LOWORD(wParam);
+
+	switch(iCtrlID)
+	{
+	case ID_CHANGE:
+		{
+			HICON hIcon = NULL;
+			if(g_bool)
+				hIcon = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_ICON));
+			else
+				hIcon = LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_ICON1));
+			g_bool = !g_bool;
+
+			
+			HWND hStaticWnd = GetDlgItem(hWnd, 1002);
+			SendMessage(hStaticWnd, STM_SETICON, (WPARAM)hIcon, 0);
+		}
+		break;
+	case 1001:
+	case 1002:
+		{
+			switch(iCmdID)
+			{
+			case STN_CLICKED:
+				MessageBox(NULL, "Hello Static", "WinStatic", MB_OK);
+				break;
+			}
+		}
+		break;
+	}
+
+}
+
+LRESULT CALLBACK WndProc(HWND hWnd, 
+				UINT uMsg, 
+				WPARAM wParam, 
+				LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_CREATE:
+		OnCreate(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_COMMAND:
+		OnCommand(hWnd, uMsg, wParam,lParam);
+		break;
+	case WM_DESTROY:
+		PostMessage(hWnd, WM_QUIT, wParam, lParam);
+		break;
+	}
+	
+	return DefWindowProc(hWnd, uMsg, wParam,lParam);
+}
+
+
+
+BOOL RegisterWnd(LPSTR pszClassName)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);
+	wce.cbClsExtra = 0;
+	wce.cbWndExtra = 0;
+	wce.hbrBackground = HBRUSH(COLOR_BTNFACE);
+	wce.hCursor = NULL;
+	wce.hIcon = NULL;
+	wce.hIconSm = NULL;
+	wce.lpfnWndProc = WndProc;
+	wce.lpszClassName = pszClassName;
+	wce.lpszMenuName = NULL;
+	wce.style = CS_HREDRAW | CS_VREDRAW;
+
+	ATOM uAtom = RegisterClassEx(&wce);
+	if(0 == uAtom)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+HWND CreateWnd(LPSTR pszClassName)
+{
+	HMENU hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_MAIN));
+
+
+	HWND hWnd = CreateWindowEx(0, pszClassName, "MyWnd"
+		, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT, NULL, hMenu, 
+		g_hInst, NULL);
+
+	return hWnd;
+}
+
+void DisplayWnd(HWND hWnd)
+{
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+}
+
+
+void Message()
+{
+	MSG msg = {0};
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+}
+
+
+
+
+void NewConsole()
+{
+	
+	//AllocConsole(); //弹出一个控制台窗口
+	
+	g_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	TCHAR szText[] = "Debug Message..........:\n";
+	WriteConsole(g_hStdOut, szText, strlen(szText), NULL, NULL);
+	
+}
+
+
+
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
+{
+	NewConsole();
+	g_hInst = hInstance;
+	RegisterWnd("MyWnd");
+	HWND hWnd = CreateWnd("MyWnd");
+	DisplayWnd(hWnd);
+	Message();
+
+
+	return 0;
+}
+
+
+
+==================================================================
+
+
+
+
+
+
+
+
+
+
