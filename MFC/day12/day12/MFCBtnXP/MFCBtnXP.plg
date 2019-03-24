@@ -1,0 +1,45 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: MFCBtnXP - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x804 /fo"Debug/MFCBtnXP.res" /d "_DEBUG" /d "_AFXDLL" "C:\MFC\day12\day12\MFCBtnXP\MFCBtnXP.rc"" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP178.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /D "_AFXEXT" /Fp"Debug/MFCBtnXP.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ    /c 
+"C:\MFC\day12\day12\MFCBtnXP\MFCBtnXP.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP178.tmp" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP179.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /D "_AFXEXT" /Fp"Debug/MFCBtnXP.pch" /Yc"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ    /c 
+"C:\MFC\day12\day12\MFCBtnXP\StdAfx.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP179.tmp" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP17A.tmp" with contents
+[
+/nologo /subsystem:windows /dll /incremental:yes /pdb:"../lib/MFCBtnXP.pdb" /debug /machine:I386 /def:".\MFCBtnXP.def" /out:"../bin/MFCBtnXP.dll" /implib:"../lib/MFCBtnXP.lib" /pdbtype:sept 
+.\Debug\MFCBtnXP.obj
+.\Debug\StdAfx.obj
+.\Debug\MFCBtnXP.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP17A.tmp"
+<h3>Output Window</h3>
+Compiling resources...
+Compiling...
+StdAfx.cpp
+Compiling...
+MFCBtnXP.cpp
+Linking...
+   Creating library ../lib/MFCBtnXP.lib and object ../lib/MFCBtnXP.exp
+
+
+
+<h3>Results</h3>
+MFCBtnXP.dll - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

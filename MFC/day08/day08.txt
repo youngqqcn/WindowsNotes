@@ -1,0 +1,151 @@
+
+
+MFC 文件操作
+
+
+    1.MFC的文件相关
+
+	CFile  - 父类是CObject, 封装了文件基本操作
+
+	CFileFind  - 父类是 CObject, 封装了文件搜素等操作
+
+
+    2.CFile的使用
+
+
+
+
+三   MFC序列化
+
+	2.1 CArchive 类:  提供了一种数据缓冲机制, 用于数据或对象的读取和存储.
+	2.2 数据读取 "<<"  和 ">>"
+		将数据保存数据缓冲 或这 将数据从缓冲区读出
+
+	2.3 数据缓冲
+		BYTE *m_lpBufCur    当前地址
+		BYTE *m_lpBufMax    缓冲区最大地址
+		BYTE *m_lpBufStart  缓冲区起始地址
+
+	
+		2.3.1 当写入数据时, 如果剩余空间小于需求空间,
+			 调用Flush()将缓冲区内容写入文件,缓冲区被清空
+		
+	3.CArchive类的使用
+		3.1 打开文件
+		3.2 定义CArchive类
+		3.3 数据读写
+		3.4 关闭CArchive
+		3.4 关闭文件
+
+
+==============================
+
+// MFCSerialize.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include "MFCSerialize.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// The one and only application object
+
+CWinApp theApp;
+
+using namespace std;
+
+
+//序列存储
+void Store()
+{
+	//打开文件
+	CFile file;
+	file.Open("C:\\serial.dat", CFile::modeCreate|CFile::modeWrite);
+
+	DWORD nNum = 10001;
+	CString str = "hello world";
+	//CHAR szText[]  = "hello serial";
+	CArchive ar(&file, CArchive::store);
+	BYTE b = 99;
+	ar << nNum;
+	ar << str;
+	ar << b ;
+	//ar << szText;
+	ar.Close();
+
+
+	//关闭文件
+	file.Close();
+}
+
+void Load()
+{
+	CFile file;
+	file.Open("C:\\serial.dat", CFile::modeRead);
+	
+	CArchive ar(&file, CArchive::load);
+
+	DWORD nNum = 0;
+	CString str;
+	CHAR szText[126] = {0};
+	memset(szText, 0, sizeof(szText));
+
+	BYTE b;
+	ar >> nNum;
+	ar >> str;
+	ar >> b;
+
+	//ar >> szText;
+
+	cout << nNum << endl;
+	cout << str.GetBuffer(0) << endl;
+	cout << b << endl;
+
+	ar.Close();
+
+	file.Close();
+}
+
+
+
+int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
+{
+	Store();
+	Load();
+
+	return 0;
+}
+
+
+
+
+
+================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+

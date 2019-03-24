@@ -1,0 +1,578 @@
+
+
+二  MFC基础
+	
+	afx :  application framework, X
+	头文件: 
+		afx.h  
+		afxwin.h  (类似 windows.h)
+		afxext.h (MFC扩展头文件)
+
+	
+
+三  MFC应用程序
+
+	1.MFC的控制台程序
+		1.1 包含afx系列头文件
+		1.2 CWinApp  theApp      -->MFC的应用程序类, 封装了应用程序启动过程
+		1.3 AfxWinInit    -->MFC初始化函数, 将应用程序的信息
+	2.MFC的动态库和静态库
+		2.1 静态库  使用了MFC库
+		2.2 动态库
+			2.2.1 MFC规则DLL
+			   2.2.1.1  使用MFC静态库的规则DLL
+			   2.2.1.2  使用MFC静态库的规则DLL
+			2.2.2 MFC扩展DLL	
+		2.3 不同点
+			2.3.1 MFC相关的afx头文件
+			2.3.2 包含一个继承CWinApp类, 并且声明了该类的全局变量
+			
+	3.MFC应用程序
+	  3.1 单文档视图应用程序
+		3.1.1 包含一个继承CWinApp类
+		3.1.2 CMainFrame类
+		3.1.3 CView的子类
+		3.1.4 CDocument的子类
+	  3.2 多文档视图应用程序
+		3.2.1 包含一个继承CWinApp类
+		3.2.2 CMainFrame类
+		3.2.3 CView的子类
+		3.2.4 CDocument的子类
+		3.2.5 CChildFrame  子框架窗口
+	  3.3 对话框应用程序
+		包含一个 继承 CWinApp 的类
+		包含一个 继承 CDialog 的类
+
+	
+	
+
+
+四 MFC的类
+	
+	1.CObject 类
+		MFC类的基础, 大部分MFC类都是它的子类
+	CObject封装了MFC的基础的基础
+		1.1 new 和 delete 
+		1.2 Assert
+		1.3 运行时信息
+		1.4 动态创建
+		1.5 序列化
+
+	2.应用程序框架
+		应用程序启动相关信息, 以及 消息映射机制.
+
+
+	3.窗口支持类
+		封装了窗口操作的API, 各种控件及窗口的框架.
+
+	4.绘图类
+		提供了绘图API的封装, 以及相关的GDI设备封装
+
+	5.MFC的集合类
+		提供了数组, 链表, 映射的数据结构操作
+
+	6.数据库支持类
+		ODBC支持类 和 DAO的支持类
+
+	7.同步类
+		临界区/事件/互斥量/信号量的封装
+	8.Socket类
+		封装了socket的编程
+
+	9.常用的数据结构
+		CString  CRect  CPoint
+
+
+
+五  第一个 MFC 程序
+
+
+	
+	1.环境设置, 
+		将头文件改成<afxwin.h> 
+			//#include <windows.h>
+			#include <afxwin.h>   
+		在Setting中, 增加MFC库支持
+
+	2.增加应用程序类  CWinApp
+		2.1 添加CWinApp的子类
+		2.2 添加InitInstance函数
+			此函数用于创建窗口和各种初始化操作
+		
+		2.2 添加CMyApp的全局变量
+	
+	3.窗口
+		3.1 添加 CFrameWnd的子类CMyFrameWnd
+		3.2 在App中添加  virtual BOOL InitInstance();
+		3.2 在 InitInstance()中
+			创建窗口, 
+			并将父窗口设置 创建出的窗口对象, 即 m_pMainWnd = pWnd;
+		3.5 在 CMyFrameWnd 中添加窗口处理函数WindowProc
+			在WindowProc函数中处理消息, 如 WM_CREATE / WM_PAINT 消息
+
+		
+		
+		
+
+	
+
+
+//////////////最小的MFC程序//////////////////////////////////////////////////////
+
+
+//应用程序类
+class CMyApp : public CWinApp
+{
+public:
+	virtual BOOL InitInstance();
+};
+
+//定义CMyApp的全局变量
+CMyApp theApp;
+
+
+
+//初始化函数
+BOOL CMyApp::InitInstance()
+{
+	AfxMessageBox("Hello App");
+	return FALSE;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////最小的完整的MFC程序//////////////////////
+
+
+// WinMFC.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+
+
+
+//框架窗口类
+class CMyFrameWnd : public CFrameWnd
+{
+public:
+	//窗口处理函数
+	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
+};
+
+LRESULT CMyFrameWnd::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch(message)
+	{
+	case WM_CREATE:
+		AfxMessageBox("WM_CREATE");
+		break;
+	case WM_PAINT://绘图消息
+		{
+			PAINTSTRUCT ps = {0};
+			HDC hDC = ::BeginPaint(m_hWnd, &ps);  //加"::" 表示使用全局(Win32的API)
+
+			CHAR  szText[] = "hello world";
+			TextOut(hDC, 100, 100, szText, strlen(szText));  //画文本
+
+			::EndPaint(m_hWnd, &ps);
+		}
+		break;
+	}
+
+	return CFrameWnd::WindowProc(message, wParam, lParam); //使用父类的窗口处理函数
+}
+
+
+
+//应用程序类
+class CMyApp : public CWinApp
+{
+public:
+	virtual BOOL InitInstance();
+};
+
+//定义CMyApp的全局变量
+CMyApp theApp;
+
+
+
+//初始化函数
+BOOL CMyApp::InitInstance()
+{
+	//AfxMessageBox("Hello App");
+
+	//创建窗口对象
+	CMyFrameWnd  *pWnd = new CMyFrameWnd();
+
+	//创建窗口
+	pWnd->Create(NULL, "MyApp");
+
+	//显示窗口
+	pWnd->ShowWindow(SW_SHOW);
+
+
+	//设置主窗口
+	m_pMainWnd = pWnd;
+
+
+	return TRUE; //如果返回FALSE , 就直接退出应用程序了
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+六  MFC应用程序的启动
+
+	MFC应用程序与Win32程序一样, 都有入口函数
+
+
+	CObject -->   -->CWinThread-->CWinApp
+
+	CWinApp封装了应用程序的消息处理
+
+
+
+
+	1. CWinApp的构造过程
+	
+		1.1 pThreadState->m_pCurrentWinThread = this; //将this保存到ThreadState中
+
+		1.2 pModuleState->m_pCurrentWinApp = this; //将this 放到 ModuleState 中
+
+
+	2.WinMain函数
+		在InitInstance函数中, 打断点, 然后在 call stack 中可以看到调用过程
+
+		具体 call stack 如下:	
+
+
+		CMyApp::InitInstance() line 74
+		AfxWinMain(HINSTANCE__ * 0x00400000, HINSTANCE__ * 0x00000000, char * 0x00141f06, int 1) line 39 + 11 bytes
+		WinMain(HINSTANCE__ * 0x00400000, HINSTANCE__ * 0x00000000, char * 0x00141f06, int 1) line 30
+		WinMainCRTStartup() line 330 + 54 bytes
+		KERNEL32! 7c817067()
+
+	
+
+	3.AfxMain
+
+		1.调用 AfxWinInit  初始化应用程序
+
+		2.调用 App的 InitApplication 初始化MFC内部数据
+
+		3.调用  CWinThread的 InitInstance() 初始化
+
+		4.调用 CWinThread 的 Run  进行消息循环
+
+		5.调用 AfxWinTerm(); 退出
+		
+		
+
+	其中:
+		CWinThread* pThread = AfxGetThread();   //获取构造过程中存放的this指针
+		CWinApp* pApp = AfxGetApp();//获取构造过程中存放的this指针
+
+		
+	
+	程序启动 
+
+		3.1 CWinApp在构造过程中, 将自己的this指针分别保存到全局变量中
+		3.2 在AfxWinMain执行中, 首先从全局变量中将保存CWinApp的地址获取到
+		3.3 调用CWinApp的InitInstance函数, 进行初始化, 我们在InitInstance函数中,
+			创建创建窗口	
+		3.4 调用Run, 进行消息循环
+
+
+	
+七  窗口创建及窗口处理函数
+
+	1.窗口创建
+		1.1 窗口的参数初始化, 包括窗口类, 风格..
+			注意: 将DefWindowProc注册为窗口处理函数
+		
+		1.2.设置了 创建HOOK(钩子)
+			当窗口创建的时候, 调用HOOK函数
+			Wnd-->  HOOK --> WndProc
+			
+		1.3.创建窗口
+			CreateWindowEx  
+			
+		1.4.卸载  创建HOOK
+			将HOOK从程序中移除 
+
+
+
+	2.HOOK程序
+		2.1 获取一个WNDPROC函数指针
+		2.2 将这个WNDPROC函数设置成当前窗口的处理函数
+
+
+	3.AfxWndProc窗口处理函数
+		3.1 根据窗口句柄获取相对于的窗口CWnd* 类型的指针
+		3.2 调用AfxCallWndProc函数
+		3.3 将窗口句柄和CWnd* 保存到MFC的映射数据中
+			根据窗口句柄查找 CWnd *      (afxMapHWND函数)
+
+	==================================================
+		CMyFrameWnd::WindowProc(unsigned int 36, unsigned int 0, long 1243104) line 25
+		AfxCallWndProc(CWnd * 0x00421bb0 {CMyFrameWnd hWnd=0x0009047e}, HWND__ * 0x0009047e, unsigned int 36, unsigned int 0, long 1243104) line 215 + 26 bytes
+		AfxWndProc(HWND__ * 0x0009047e, unsigned int 36, unsigned int 0, long 1243104) line 368
+		AfxWndProcBase(HWND__ * 0x0009047e, unsigned int 36, unsigned int 0, long 1243104) line 220 + 21 bytes
+	==================================================
+		
+
+	4.窗口的创建 及 处理过程
+		4.1 将DefWindowProc函数注册为当前窗口的处理函数
+		4.2 定义钩子函数
+		4.3 创建窗口, 并执行钩子程序
+		4.4 将窗口类指针和窗口句柄的对应关系, 保存
+		4.5 在钩子函数中将 AfxWndProc (Base)函数设置成当前窗口的处理函数
+		4.6 在AfxWndProc(Base)收到窗口消息, 
+			再从对应关系数据(map)中,查询到相应的窗口类指针
+		4.7 在AfxCallWndProc中调用窗口类WindowProc函数处理消息
+
+
+
+所有的CWnd的子类共用一个消息函数, 如下:
+
+==============================================================================================
+LRESULT CALLBACK
+AfxWndProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam)
+{
+	// special message which identifies the window as using AfxWndProc
+	if (nMsg == WM_QUERYAFXWNDPROC)
+		return 1;
+
+	// all other messages route through message map
+	CWnd* pWnd = CWnd::FromHandlePermanent(hWnd);  //通过这个函数进行 消息分发
+	ASSERT(pWnd != NULL);
+	ASSERT(pWnd->m_hWnd == hWnd);
+	return AfxCallWndProc(pWnd, hWnd, nMsg, wParam, lParam);
+}
+=============================================================================================
+		
+
+
+
+八  消息映射机制
+
+	1.在FrameWnd中添加消息宏定义
+		DECLARE_MESSAGE_MAP()
+	2.添加消息宏实现
+	3.添加消息处理函数
+	4.添加消息 和 消息处理函数的 对应
+
+=========================宏展开==================================
+	const AFX_MSGMAP* PASCAL theClass::_GetBaseMessageMap() 
+	{ 
+		return &baseClass::messageMap; 
+	} 
+
+	const AFX_MSGMAP* theClass::GetMessageMap() const 
+	{ 
+		return &theClass::messageMap; 
+	} 
+
+	AFX_COMDAT AFX_DATADEF const AFX_MSGMAP theClass::messageMap = 
+	{ 
+		&theClass::_GetBaseMessageMap, 
+		&theClass::_messageEntries[0] 
+	}; 
+
+	AFX_COMDAT const AFX_MSGMAP_ENTRY theClass::_messageEntries[] = 
+	{ 
+		{ WM_CREATE,0, 0, 0, AfxSig_lwl, (AFX_PMSG)(AFX_PMSGW)(LRESULT (AFX_MSG_CALL CWnd::*)(WPARAM, LPARAM))&OnCreate },
+		{0, 0, 0, 0, AfxSig_end, (AFX_PMSG)0 } \
+	}; 
+=======================================================================
+
+
+
+=============================================================================================
+// MFCMsg.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+
+
+class CMsgFrame : public CFrameWnd
+{
+public:
+	virtual LRESULT WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+public:
+	DECLARE_MESSAGE_MAP() 
+		
+public:
+
+	//消息处理函数
+	afx_msg LRESULT OnPaint(WPARAM wParam, LPARAM lParam);
+
+
+};
+
+//消息映射 宏实现
+BEGIN_MESSAGE_MAP(CMsgFrame, CFrameWnd )
+	//消息映射对应
+	ON_MESSAGE(WM_PAINT, OnPaint)
+END_MESSAGE_MAP()
+
+
+
+
+
+LRESULT CMsgFrame::OnPaint(WPARAM wParam, LPARAM lParam)
+{
+	PAINTSTRUCT ps = {0};
+	HDC hDC = ::BeginPaint(m_hWnd, &ps);
+
+
+	TextOut(hDC, 100, 100, "Msg", 3);
+
+
+	::EndPaint(m_hWnd, &ps);
+
+	return 0;
+}
+
+
+
+
+
+
+LRESULT CMsgFrame::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	//switch ... case
+
+
+	return CFrameWnd::WindowProc(uMsg, wParam, lParam);
+}
+
+
+
+
+class CMsgApp : public CWinApp
+{
+public:
+	virtual BOOL InitInstance();
+};
+
+CMsgApp theApp;
+
+
+BOOL CMsgApp::InitInstance()
+{
+
+	CMsgFrame *pWnd = new CMsgFrame();
+	pWnd->Create(NULL, "MsgApp");
+	this->m_pMainWnd = pWnd;
+
+	this->m_pMainWnd->ShowWindow(SW_SHOW);
+	this->m_pMainWnd->UpdateWindow();
+
+	return TRUE;
+}
+
+
+=============================================================================================
+
+
+
+	消息宏的实现:
+
+	数据结构
+		1. AFX_MSGMAP_ENTRY用于保存消息ID 消息处理函数指针 的对应信息
+
+		struct AFX_MSGMAP_ENTRY
+		{
+			UINT nMessage;   // windows message
+			UINT nCode;      // control code or WM_NOTIFY code
+			UINT nID;        // control ID (or 0 for windows messages)
+			UINT nLastID;    // used for entries specifying a range of control id's
+			UINT nSig;       // signature type (action) or pointer to message #
+			AFX_PMSG pfn;    // routine to call (or special value)
+		};
+
+		2. AFX_MSGMAP用于保存GetBaseMap函数的地址 和 AFX_MSGMAP_ENTRY 的地址.
+		
+		struct AFX_MSGMAP
+		{
+		#ifdef _AFXDLL
+			const AFX_MSGMAP* (PASCAL* pfnGetBaseMap)();
+		#else
+			const AFX_MSGMAP* pBaseMap;
+		#endif
+			const AFX_MSGMAP_ENTRY* lpEntries;
+		};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+	
+	

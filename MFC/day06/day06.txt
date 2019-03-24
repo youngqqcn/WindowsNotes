@@ -1,0 +1,342 @@
+
+
+一 MFC文档视图程序
+
+	1.MFC文档视图的各个部分
+		
+		1.1 CWinApp 应用程序类, 应用程序的启动/消息处理等. 
+		   类中还维护了一个文档管理器
+
+		1.2 CFrameWnd框架窗口类, 提供了窗口的容器, 可以放置菜单/工具栏/状态栏/视图
+		   等窗口
+
+		1.3 CView 视图类, 提供了数据的显示以及和用户交互操作,
+		1.4 CDocument 文档类, 提供了数据的维护操作
+		1.5 CDocTemplate 文档模板类, 提供了对文档CDocument类的管理.
+		    CSingleDocTemplate单文档
+		    CMultiDocTemplate 多文档
+
+		1.6 CDocManager 文档管理器, 提供了文档模板的管理.
+
+	2.各部分的关系
+
+		2.1 CWinApp中维护了 
+		    文档管理器CDocManager* m_pDocManager;
+		    和主窗口 m_pMainWnd 
+
+		2.2 m_pDocManager维护了文档模板链表
+		2.3 文档模板维护了文档对象. 
+			CSingleDocTemplate : 维护了一个文档.
+			CMultiDocTemplate: 维护了一个文档的链表
+
+		2.4 CDocument文档中, 维护了一个view链表
+
+		2.5 CFrameWnd主要维护了当前的活动视图m_pActiveView
+		2.6 CView视图, 维护一个当前视图可以显示的文档指针m_pDocument.
+	
+
+	3.创建过程
+		
+
+
+
+
+二   MFC绘图
+
+
+	1.MFC绘图相关
+		CDC  父类是CObject , 封装了HDC句柄, 及大部分绘图相关的API
+
+	2.WindowDC  父类CDC, 是窗口的DC, 是以窗口的左上角和大小进行绘图的DC
+
+	3.CClientDC - 父类CDC, 是客户区的DC.
+
+	4.CPaintDC  父类CDC, 客户区DC, 只能用在WM_PAINT消息中
+	
+	5.CMetaFileDC  父类是 CDC, 以WMF或者EMF文件方式进行绘图.
+
+
+
+
+	DC的使用
+		CDC的使用
+	
+		BOOL CreateDC(
+  			 LPCTSTR lpszDriverName,
+  			 LPCTSTR lpszDeviceName,
+  			 LPCTSTR lpszOutput,
+   			 const void* lpInitData 
+		);
+
+
+	WindowDC使用
+		是以窗口的边框的左上角为原点
+
+
+	CLientDC
+		以客户区左上角为原点
+
+		//获取客户区DC
+		CDC *pDc = GetDC();	
+		ReleaseDC(pDc);
+
+
+
+	WM_PAINT
+		CPaintDC 的构造和析构中封装了 BeginPaint和EndPaint, 所以只能用在 WM_PAINT消息中
+
+
+	CMetaFileDC
+		1.创建DC          Create/CreateEnhanced
+		2.绘图
+		3.关闭DC            Close/CloseEnhanced
+		4.显示                
+		      PlayMetaFile
+
+		
+
+
+==================================
+
+void CMFCDcView::OnCdc() 
+{
+#if 1
+	CDC dc;
+	dc.CreateDC("DISPLAY", NULL, NULL, NULL);//创建显示器DC
+	dc.Rectangle(50, 50 ,500, 500);
+	
+	dc.DeleteDC();//删除DC
+#endif
+}
+
+void CMFCDcView::OnWindowdc() 
+{
+	CWindowDC dc(this);
+	dc.Rectangle(50, 50, 500, 500);
+	
+
+}
+
+void CMFCDcView::OnClientdc() 
+{
+	CClientDC dc(this);
+	dc.Rectangle(50, 50, 500, 500);
+	
+	//获取客户区DC
+	CDC *pDc = GetDC();	
+	ReleaseDC(pDc);
+}
+
+void CMFCDcView::OnPaint() 
+{
+	CPaintDC dc(this); // device context for painting
+	
+	// TODO: Add your message handler code here
+	dc.FillSolidRect(50, 50, 100, 100, RGB(0, 255, 0));
+	// Do not call CView::OnPaint() for painting messages
+}
+
+void CMFCDcView::OnMetafiledc() 
+{
+	// TODO: Add your command handler code here
+	CMetaFileDC dc;
+	dc.Create("C:\\meta.data");
+
+	//绘图
+	dc.FillSolidRect(0, 0, 100, 100, RGB(0, 0, 255));
+
+	//关闭dc
+	HMETAFILE hMetaFile = dc.Close();
+
+	//显示MetaFile
+	CClientDC dc1(this);
+	dc1.PlayMetaFile(hMetaFile);
+
+	//删除MetaFile句柄
+	DeleteMetaFile(hMetaFile);
+}
+
+
+================================
+
+
+
+
+
+1.GDI绘图对象  (GDI Object)
+
+	HPEN    HBRUSH   HFONT    HBITMAP    调色板 HPALLETE    区域 HRGN
+
+
+2. MFC相关类   
+
+	CPen
+	CBrush
+	CFont
+	CBitmap
+	CPallete
+	CRgn
+
+
+3.画笔 CPen
+
+	
+
+
+位图
+
+	HANDLE LoadImage(
+		HINSTANCE hinst，
+		LPCTSTR lpszName，
+		UINT uType，
+		int cxDesired，
+		int cyDesired，
+		UINT fuLoad
+		);
+
+
+
+
+
+===================================================
+
+
+void CChildView::OnPen() 
+{
+	//创建画笔
+	CPen pen(PS_SOLID, 10, RGB(0, 0, 255));
+
+	//客户区DC
+	CClientDC dc(this);
+
+	//选择画笔
+	CPen *pOldPen = dc.SelectObject(&pen);
+
+	//绘图
+	dc.Rectangle(300, 300, 200, 200);
+
+	//选出画笔
+	dc.SelectObject(pOldPen);
+
+}
+
+
+
+void CChildView::OnBrush() 
+{
+	//创建画刷
+	CBrush brush(HS_CROSS, RGB(0, 0, 255));
+	//客户区DC
+	CClientDC dc(this);
+
+	//选择画刷
+	CBrush *pOldBrush = dc.SelectObject(&brush);
+
+	//绘图
+	dc.Rectangle(500, 500, 150, 150);
+
+	dc.SelectObject(pOldBrush);
+}
+
+void CChildView::OnBitmap() 
+{
+	CBitmap bmp;
+	bmp.LoadBitmap(IDB_BITMAP1);
+	
+	//创建dc
+	CClientDC dc(this);
+	CDC dcBmp;
+	dcBmp.CreateCompatibleDC(&dc);
+
+	//将位图放在DC中
+	CBitmap *pOldBmp = dcBmp.SelectObject(&bmp);
+
+	//绘制位图
+	dc.BitBlt(500, 500, 100, 100, &dcBmp, 0, 0, SRCCOPY);
+
+	//选出位图
+	dcBmp.SelectObject(pOldBmp);
+
+}
+
+void CChildView::OnImage() 
+{
+	// TODO: Add your command handler code here
+	HANDLE hImg =	LoadImage(NULL, "C:\\Sunset.bmp", IMAGE_BITMAP, 
+						0,
+						0,
+						LR_DEFAULTCOLOR|LR_LOADFROMFILE|LR_DEFAULTSIZE);
+	
+	BITMAP bitmap = {0};
+	GetObject(hImg, sizeof(bitmap), &bitmap);
+	
+
+	//附加位图对象
+	CBitmap bmp;
+	bmp.Attach(hImg);
+
+
+	//创建dc
+	CClientDC dc(this);
+	CDC dcBmp;
+	dcBmp.CreateCompatibleDC(&dc);
+	CBitmap *pOldBmp = dcBmp.SelectObject(&bmp);
+	dc.BitBlt(0, 0, bitmap.bmWidth, bitmap.bmHeight, &dcBmp, 0, 0, SRCCOPY);
+
+	dc.SelectObject(pOldBmp);
+}
+
+
+
+
+====================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	

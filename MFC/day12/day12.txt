@@ -1,0 +1,35 @@
+
+
+
+二. MFC动态库
+
+	1. MFC动态库的类型
+		1.1 规则库
+			1.1.1 静态链接MFC库
+			1.1.2 动态链接MFC库
+		
+			void ShowDlg()
+			{
+				AFX_MANAGE_STATE(AfxGetStaticModuleState());
+				CRegDlg dlg;
+				dlg.DoModal();
+			}
+
+			typedef void (*SHOWDLG)();
+
+			void CUseRegDll2Dlg::OnButton1() 
+			{
+				HMODULE hDll = (HMODULE)LoadLibrary("MFCRegDll3.dll");
+				SHOWDLG ShowDlg = (SHOWDLG)GetProcAddress(hDll, "ShowDlg");
+				ShowDlg();
+				FreeLibrary(hDll);
+			}
+
+
+
+		1.2 扩展库
+			
+
+		
+
+	2.

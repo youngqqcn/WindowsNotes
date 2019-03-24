@@ -1,0 +1,38 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: MFCDll - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x804 /fo"Debug/MFCDll.res" /d "_DEBUG" /d "_AFXDLL" "C:\MFC\day01\MFCDll\MFCDll.rc"" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP20.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /D "_USRDLL" /Fp"Debug/MFCDll.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ    /c 
+"C:\MFC\day01\MFCDll\MFCDll.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP20.tmp" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP21.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /D "_USRDLL" /Fp"Debug/MFCDll.pch" /Yc"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ    /c 
+"C:\MFC\day01\MFCDll\StdAfx.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP21.tmp" 
+Creating command line "link.exe /nologo /subsystem:windows /dll /incremental:yes /pdb:"../bin/MFCDll.pdb" /debug /machine:I386 /def:".\MFCDll.def" /out:"../bin/MFCDll.dll" /implib:"../bin/MFCDll.lib" /pdbtype:sept  .\Debug\MFCDll.obj .\Debug\StdAfx.obj .\Debug\MFCDll.res "
+<h3>Output Window</h3>
+Compiling resources...
+Compiling...
+StdAfx.cpp
+Compiling...
+MFCDll.cpp
+Linking...
+   Creating library ../bin/MFCDll.lib and object ../bin/MFCDll.exp
+
+
+
+<h3>Results</h3>
+MFCDll.dll - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

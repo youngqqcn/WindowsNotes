@@ -1,0 +1,304 @@
+
+
+MFC序列化
+
+	1.对象的序列化(发序列化)
+
+	
+
+
+	2.对象的序列化使用
+	   2.1 必须是CObject的子类
+	   2.2 添加支持序列化的宏 和 宏实现
+	   2.3 要重写函数 Serialize
+		
+
+
+
+
+	3.序列化的实现
+
+	#define DECLARE_SERIAL(class_name) \
+	_DECLARE_DYNCREATE(class_name) \
+	AFX_API friend CArchive& AFXAPI operator>>(CArchive& ar, class_name* &pOb);
+
+
+	#define IMPLEMENT_SERIAL(class_name, base_class_name, wSchema) \
+	CObject* PASCAL class_name::CreateObject() \
+		{ return new class_name; } \
+	_IMPLEMENT_RUNTIMECLASS(class_name, base_class_name, wSchema, \  全局变量
+		class_name::CreateObject) \
+	AFX_CLASSINIT _init_##class_name(RUNTIME_CLASS(class_name)); \
+	CArchive& AFXAPI operator>>(CArchive& ar, class_name* &pOb) \
+		{ pOb = (class_name*) ar.ReadObject(RUNTIME_CLASS(class_name)); \
+			return ar; } \
+
+	struct AFX_CLASSINIT
+		{ AFX_CLASSINIT(CRuntimeClass* pNewClass) { AfxClassInit(pNewClass); } };
+	
+
+
+
+	
+
+	4.类的Schema(版本) 
+	   4.1 通过IMPLEMENT_SERIAL 宏的第3个参数Schema来控制类的版本  (或上VERSIONABLE_SCHEMA)
+	   4.2  例如:　　IMPLEMENT_SERIAL(CAnimal, CObject, VERSIONABLE_SCHEMA | 1)
+	　 4.3 在读取数据时, 增加版本标识
+	   4.4  
+
+
+
+===================================
+
+// MFCSerialize2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include "MFCSerialize2.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// The one and only application object
+
+CWinApp theApp;
+
+using namespace std;
+
+
+//1.继承CObject
+class CAnimal : public CObject
+{
+public:
+	//2.添加序列宏
+	DECLARE_SERIAL(CAnimal)
+
+public:
+	virtual void Serialize(CArchive &ar);
+
+
+public:
+	int			m_nLeg;
+	CString		m_strName;
+	int			m_nHand;
+};
+//3.实现宏
+IMPLEMENT_SERIAL(CAnimal, CObject, VERSIONABLE_SCHEMA | 0)
+
+
+void CAnimal::Serialize(CArchive &ar)
+{
+	CObject::Serialize(ar); //调用父类的序列化函数
+
+	UINT uSchema = ar.GetObjectSchema() ;
+	if(0 == uSchema ) //判断版本号
+	{
+		if(ar.IsLoading()) //读
+		{
+			ar >> m_nLeg;
+			ar >> m_strName;
+		}
+		else if(ar.IsStoring()) //写
+		{
+			ar << m_nLeg;
+			ar << m_strName;
+		}
+	}
+	else //if(1 == uSchema)
+	{
+		if(ar.IsLoading()) //读
+		{
+			ar >> m_nLeg;
+			ar >> m_strName;
+			ar >> m_nHand;
+		}
+		else if(ar.IsStoring()) //写
+		{
+			ar << m_nLeg;
+			ar << m_strName;
+			ar << m_nHand;
+		}
+	}
+
+}
+
+void TestStore()
+{
+	CFile file;
+	file.Open("C:\\obj.dat", CFile::modeCreate | CFile::modeWrite);
+
+	//定义存储的ar
+	CArchive ar(&file, CArchive::store);
+
+	CAnimal *pAnimal  = new CAnimal();
+	pAnimal->m_nLeg = 9;
+	pAnimal->m_strName = "青青";
+	pAnimal->m_nHand = 5555;
+	
+
+	//animal.Serialize(ar);
+
+	ar << pAnimal;
+
+	ar.Close();
+
+	file.Close();
+}
+
+void TestLoad()
+{
+	CFile file;
+	file.Open("C:\\obj.dat",  CFile::modeRead);
+
+	//定义存储的ar
+	CArchive ar(&file, CArchive::load);
+
+	CAnimal animal;
+
+
+	//读取对象内数据
+	//animal.Serialize(ar);
+
+
+	//读取对象
+	CAnimal *pAnimal = NULL;
+	ar >> pAnimal;
+
+	cout << pAnimal->m_nLeg << endl;
+	cout << (LPCTSTR)pAnimal->m_strName << endl;
+	cout << pAnimal->m_nHand << endl;
+	ar.Close();
+
+	file.Close();
+}
+
+
+
+int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
+{
+	TestStore();
+	TestLoad();
+	return 0;
+}
+
+
+====================================
+
+
+
+
+二  MFC对话框
+
+	1 MFC对话框
+		1.1.有模式对话框
+		1.2.无模式对话框
+
+	2.MFC APP对话框的使用
+		2.1 对话框窗口
+		2.2 应用程序主窗口
+
+	3. 有模式对话框的使用
+	   3.1 使用
+		3.1.1 定义对话框资源
+		3.1.2 定义对话框类
+		3.1.3 显示对话框
+	   	3.1.4 WM_INITDIALOG-->OnInitDialog
+		3.1.5 消息映射	
+		3.1.6 CDialog::OnOK  - 确定的方式关闭, DoModel返回IDOK
+			CDialog::OnCancel  函数返回 IDCANCEL
+			CDialog::OnEndDialog  指定返回值
+
+	
+	   3.2 DoModel执行过程
+		1.查找对话框资源
+		2.将父窗口设置成禁止输入状态, 禁止父窗口的消息循环
+		3.创建对话框窗口
+		4.调用消息循环, 等候对话框关闭
+		5.如果对话框关闭, 将自己的窗口隐藏
+		6.将父窗口设置激活窗口
+		7.删除自己
+		8.返回对话框结束参数
+		
+
+
+		
+		
+	4.无模式对话框
+		4.1 使用
+			4.1.1定义对话框资源
+			4.1.2 定义对话类
+			4.1.3创建对话框  CDialog::Create
+			4.1.4显示对话
+				CDialog::ShowWindow显示
+			4.1.5对话框的关闭
+				需要OnOK/OnCancel中手动添加DestroyWindow函数
+
+		4.2 执行
+			
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

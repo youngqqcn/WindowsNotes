@@ -1,0 +1,21 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: MFCMenu - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x804 /fo"Debug/MFCMenu.res" /d "_DEBUG" /d "_AFXDLL" "C:\MFC\day02\MFCMenu\MFCMenu.rc"" 
+Creating command line "link.exe /nologo /subsystem:windows /incremental:yes /pdb:"Debug/MFCMenu.pdb" /debug /machine:I386 /out:"Debug/MFCMenu.exe" /pdbtype:sept  .\Debug\StdAfx.obj .\Debug\MFCMenu.obj .\Debug\MFCMenu.res "
+<h3>Output Window</h3>
+Compiling resources...
+Linking...
+
+
+
+<h3>Results</h3>
+MFCMenu.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

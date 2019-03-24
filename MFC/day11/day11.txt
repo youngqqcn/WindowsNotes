@@ -1,0 +1,87 @@
+MFC属性页  
+	1.标签式
+	2.向导式(用于安装)
+	
+	
+	相关类
+		CPropertySheet   -->父类 CWnd, 用作容器, 
+		在Sheet上可以放置一个或多个CPropertyPage
+		
+		CPropertyPage   -->父类是 CDialog, 是CPropertySheet中独立的页面
+		
+	
+	标签式属性页的使用
+		2.1 定义CPropertySheet
+		2.2 将页面CPropertyPage加入到Sheet中
+		2.3 显示属性页
+		2.4 消息响应
+		2.5 消息的响应
+			当点击Sheet上的按钮时, 会调用Page上相应的命令处理函数,
+			如 : OnOk, OnApply 等
+		
+		
+		让"应用"按钮可用   SetModified(TRUE);
+		
+		
+		CSettingSheet  管理  各种page
+		CDataManager 管理 所有page上的数据
+		
+=================================================
+	// TODO: Add your command handler code here
+	CPropertySheet  sheet("设置");
+	//sheet.m_psh.dwFlags |= PSH_NOAPPLYNOW | PSH_HASHELP;
+	CPenPage  page1;
+	CBrushPage page2;
+	sheet.AddPage(&page1);
+	sheet.AddPage(&page2);
+	INT iRet = sheet.DoModal();
+	if(IDOK !=  iRet)
+		return;
+=============================================================
+	
+	
+	向导式属性页
+		3.1 定义 CPropertySheet 
+		3.2 定义 CPropertyPage
+		3.3 添加消息
+		3.4 设置成 向导方式
+		3.5 显示属性页
+		3.6 响应消息
+			Sheet上的每个按钮只对当前激活的Page有效.
+			
+======================================
+// CWizardSheet message handlers
+BOOL	CWizardSheet::Setting()
+{
+	//添加页面
+	AddPage(&m_PenPage);
+//	AddPage(&m_BrushPage);
+	AddPage(&m_ColorPage);
+
+	//设置成向导模式
+	SetWizardMode();
+
+
+	if(ID_WIZFINISH != DoModal())
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}
+========================================
+	
+
+通用控件
+	1.Spin      CSpinButtonCtrl
+	2.滑块      CSliderCtrl
+	3.进度条    CProgressCtrl
+	4.列表      CListCtrl
+	5.TreeCtrl  CTreeCtrl
+	
+	
+===================================
+	int iPos = m_wndProgress.GetPos();
+	iPos += 10;
+	m_wndProgress.SetPos(iPos);
+===================================

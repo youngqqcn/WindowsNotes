@@ -1,0 +1,19 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: MFCModelDialog - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "link.exe /nologo /subsystem:windows /incremental:yes /pdb:"Debug/MFCModelDialog.pdb" /debug /machine:I386 /out:"Debug/MFCModelDialog.exe" /pdbtype:sept  .\Debug\StdAfx.obj .\Debug\MFCModelDialog.obj .\Debug\MFCModelDialog.res "
+<h3>Output Window</h3>
+Linking...
+
+
+
+<h3>Results</h3>
+MFCModelDialog.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

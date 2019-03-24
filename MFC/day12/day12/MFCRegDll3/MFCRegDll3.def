@@ -1,0 +1,8 @@
+; MFCRegDll3.def : Declares the module parameters for the DLL.
+
+LIBRARY      "MFCRegDll3"
+DESCRIPTION  'MFCRegDll3 Windows Dynamic Link Library'
+
+EXPORTS
+    ; Explicit exports can go here
+	ShowDlg @1

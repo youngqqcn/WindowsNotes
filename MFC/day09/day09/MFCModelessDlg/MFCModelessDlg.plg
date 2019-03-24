@@ -1,0 +1,19 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: MFCModelessDlg - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "link.exe /nologo /subsystem:windows /incremental:yes /pdb:"Debug/MFCModelessDlg.pdb" /debug /machine:I386 /out:"Debug/MFCModelessDlg.exe" /pdbtype:sept  .\Debug\StdAfx.obj .\Debug\MFCModelessDlg.obj .\Debug\MFCModelessDlg.res "
+<h3>Output Window</h3>
+Linking...
+
+
+
+<h3>Results</h3>
+MFCModelessDlg.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

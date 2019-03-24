@@ -1,0 +1,7 @@
+; MFCBtnXP.def : Declares the module parameters for the DLL.
+
+LIBRARY      "MFCBtnXP"
+DESCRIPTION  'MFCBtnXP Windows Dynamic Link Library'
+
+EXPORTS
+    ; Explicit exports can go here

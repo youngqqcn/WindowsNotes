@@ -1,0 +1,537 @@
+﻿
+
+
+动态创建过程：
+	1.获取该类的RuntimeClass变量的指针pClass
+	2.调用RuntimeClass的CreateObject函数
+	3.在CreateObject函数中,调用m_pfnCreateObject函数指针, 
+	   这个函数指针是该类的CreateObject函数地址
+	4.在CreateObject函数中会使用 new 创建对象并返回
+
+
+二  文档
+
+	1.MFC文档类的作用
+		提供数据管理的功能, 包括数据的存储等功能.也可以提供文件打开等消息处理.
+		
+	2.CDocument  文档类, 父类是 CCmdTarget , 提供了MFC关于文档的封装
+	
+	3.MFC文档的使用
+	
+	
+
+	4.创建过程
+	  4.1 CFrameWnd::LoadFrame函数创建 FrameWnd窗口
+	  4.2 在CFrameWnd的WM_CREATE消息(OnCreate函数)中, 调用CFrameWnd
+		的OnCreateClient函数.
+	  4.3 OnCreateClient函数中, 会根据传入的View的RuntimeClass信息, 
+		将View对象和窗口创建出来
+    	  4.4 在CView的WM_CREATE消息(OnCreate函数)中,获取到创建的参数
+		中的CDocument的地址.
+	  4.5 使用CDocuent::AddView函数,将View的地址保存到Document中,
+		同时将Document地址保存到View中m_pDocument.
+	
+	
+  	5.WM_COMMAND消息处理
+	   CView-->CDocument-->CFrameWnd-->CWinApp
+		
+
+	  过程:
+		1.WM_COMMAND发到程序的顶层窗口FrameWnd
+		2.FrameWnd获取当前活动视图将命令派发给View
+		3.在View中进行消息处理,然后发给Document
+		4.Document进行消息处理,返回FrameWnd, FrameWnd自己进行消息处理
+		5.派发给CWinApp进行消息处理
+
+===========================================================
+// MFCDoc.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+#include "resource.h"
+
+class CMyDocument : public CDocument
+{
+public:
+	CMyDocument();
+	DECLARE_DYNCREATE(CMyDocument)
+public:
+	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnTest();
+
+
+public:
+	CString m_strText;
+};
+IMPLEMENT_DYNCREATE(CMyDocument, CDocument)
+
+BEGIN_MESSAGE_MAP(CMyDocument, CDocument)
+	//ON_COMMAND(ID_NEW, OnTest)
+END_MESSAGE_MAP()
+
+void CMyDocument::OnTest()
+{
+	AfxMessageBox("test  document");
+}
+
+
+
+CMyDocument::CMyDocument()
+{
+	m_strText = "hello document";
+}
+
+
+
+class CDocView : public CEditView
+{
+public:
+	DECLARE_DYNCREATE(CDocView)
+
+	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnTest();
+	virtual void OnInitialUpdate();
+};
+IMPLEMENT_DYNCREATE(CDocView, CEditView)
+
+BEGIN_MESSAGE_MAP(CDocView, CEditView)
+	//ON_COMMAND(ID_NEW, OnTest)
+END_MESSAGE_MAP()
+
+void CDocView::OnTest()
+{
+	AfxMessageBox("test  DocView");
+}
+
+
+void CDocView::OnInitialUpdate()
+{
+	CDocument *pDoc = GetDocument();//view中有document的指针
+	if(FALSE == pDoc->IsKindOf(RUNTIME_CLASS(CMyDocument)))
+	{
+		return;
+	}
+	else
+	{
+		CMyDocument *pMyDoc = (CMyDocument *)pDoc;
+		SetWindowText(pMyDoc->m_strText);
+	}
+}
+
+
+class CDocFrame : public CFrameWnd
+{
+public:
+	DECLARE_MESSAGE_MAP()
+	afx_msg void OnTest();
+};
+
+BEGIN_MESSAGE_MAP(CDocFrame, CFrameWnd)
+	//ON_COMMAND(ID_NEW, OnTest)
+END_MESSAGE_MAP()
+
+void CDocFrame::OnTest()
+{
+	AfxMessageBox("test  DocFrame");
+}
+
+
+class CDocApp : public CWinApp
+{
+	DECLARE_MESSAGE_MAP()
+public:
+	virtual BOOL InitInstance();
+	afx_msg void OnTest();
+};
+BEGIN_MESSAGE_MAP(CDocApp, CWinApp)
+	ON_COMMAND(ID_NEW, OnTest)
+END_MESSAGE_MAP()
+
+void CDocApp::OnTest()
+{
+	AfxMessageBox("test  DocApp");
+}
+
+
+
+CDocApp theApp;
+
+
+
+BOOL  CDocApp ::InitInstance()
+{
+	CDocFrame *pWnd = new CDocFrame();
+
+	CCreateContext context;
+	context.m_pNewViewClass = RUNTIME_CLASS(CDocView);
+	context.m_pCurrentDoc = new CMyDocument(); //增加文档类支持
+
+	pWnd->LoadFrame(IDR_MAINFRM, WS_OVERLAPPEDWINDOW, NULL, &context);
+
+	m_pMainWnd = pWnd;
+	m_pMainWnd->ShowWindow(SW_SHOW);
+	m_pMainWnd->UpdateWindow();
+
+	pWnd->InitialUpdateFrame(NULL, TRUE); //更新所有frame
+
+	return TRUE;
+}
+
+===========================================================
+
+
+
+三  MFC单文档视图应用程序(SDI)
+
+	
+	1.单文档视图
+		只能对单个文档进行处理的应用程序
+	
+	2.MFC单文档视图相关
+		CWinApp\CFrameWnd\CView\CDocument
+		CDocTemplate  - 文档模板类, 父类CCmdTarget类, 
+		作用是处理框架窗口,视图及文档之间的关系
+
+		CDocTemplate是抽象类, 子类:
+			CSingleDocTemplate  单文档模板类
+			CMultiDocTemplate 多文档模板类
+	3.单文档视图的实现
+		
+		//创建文档模板对象
+		CSingleDocTemplate *pTemp = NULL;
+		pTemp = new CSingleDocTemplate(
+			IDR_MAINFRM, 
+			RUNTIME_CLASS(CSdiDocument),
+			RUNTIME_CLASS(CSdiFrame),
+			RUNTIME_CLASS(CSdiView));
+
+		//保存文档模板
+		AddDocTemplate(pTemp);
+
+		//新建文档
+		OnFileNew();
+
+	4.单文视图创建过程
+		4.1 创建CSingleDocTemplate对象, 同时将FrameWnd/View/Document/RUNTIME_CLASS信息保存
+		CRuntieClass *	m_pDocClass
+		CRuntieClass *	m_pFrameClass
+		CRuntieClass *	m_pViewClass
+
+		4.2 调用AddDocTemplate将模板对象pTemplate添加到CWinApp中
+		4.3 在CWinApp中, 将pTemplate保存m_pDocManager中
+			CDocManager *m_pDocManager
+
+		4.4 使用CWinApp的 OnFileNew或其他方式创建文档
+		4.5 在CWinApp的OnFileNew中,调用CDocManager的OnFileNew函数	
+		4.6 在CDocManager的OnFileNew函数中查找模板 pTemplate.
+			然后调用pTemplate的 OpenDocumentFile函数打开新文档
+			pTemplate->OpenDocumentFile()
+		4.7 使用CreateNewDocument函数创建一个文档对象
+		4.8 使用CreateNewFrame函数以及pDocument创建框架窗口
+
+		4.9 创建框架窗口时, 使用CFrameWnd的LoadFrame函数,将窗口创建.
+
+
+	5.单文档视图的数据关系
+
+		CWinApp 
+		   |--->  m_pMainWnd     
+		   |		|-->m_pActiveView
+                   |                  |-->m_pDocument
+                   |                        |-->viewList(view *)
+                   |                        |-->view....
+		   |--->  m_pDocManager
+                   |           |-->templateList
+                   |                  |-->单文档template
+                   |                         |-->m_pOnlyDoc  文档对象指针
+                   |                  |-->单文档Template....
+
+
+
+
+
+===========================================
+
+
+// MFCSdi.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+#include "resource.h"
+
+
+
+class CSdiDocument : public CDocument
+{
+	DECLARE_DYNCREATE(CSdiDocument)
+public:
+	
+};
+IMPLEMENT_DYNCREATE(CSdiDocument, CDocument )
+
+class CSdiView : public CEditView
+{
+	DECLARE_DYNCREATE(CSdiView)
+public:
+};
+IMPLEMENT_DYNCREATE(CSdiView, CEditView )
+
+
+class CSdiFrame : public CFrameWnd
+{
+	DECLARE_DYNCREATE(CSdiFrame)
+public:
+
+};
+IMPLEMENT_DYNCREATE(CSdiFrame, CFrameWnd )
+
+
+
+class  CSdiApp : public CWinApp
+{
+public:
+	virtual BOOL InitInstance();
+};
+
+CSdiApp  theApp;
+
+BOOL CSdiApp::InitInstance()
+{
+
+	//创建文档模板对象
+	CSingleDocTemplate *pTemp = NULL;
+	pTemp = new CSingleDocTemplate(
+			IDR_MAINFRM, 
+			RUNTIME_CLASS(CSdiDocument),
+			RUNTIME_CLASS(CSdiFrame),
+			RUNTIME_CLASS(CSdiView));
+
+	//保存文档模板
+	AddDocTemplate(pTemp);
+
+
+	//创建文档模板对象
+	CSingleDocTemplate *pTemp2 = NULL;
+	pTemp2 = new CSingleDocTemplate(
+			IDR_MAINFRM2, 
+			RUNTIME_CLASS(CSdiDocument),
+			RUNTIME_CLASS(CSdiFrame),
+			RUNTIME_CLASS(CSdiView));
+
+	//保存文档模板
+	AddDocTemplate(pTemp2);
+
+	//新建文档
+	OnFileNew();
+
+	//显示窗口
+	m_pMainWnd->ShowWindow(SW_SHOW);
+	m_pMainWnd->UpdateWindow();
+
+	return TRUE;
+}
+
+
+=========================================
+
+
+
+
+
+
+四   MFC多文档视图应用程序 (MDI)
+
+
+	CWinApp  / CView / CDocument
+	CMDIFrameWnd / CMDIChildWnd
+	
+
+
+	MDI程序创建
+		1.定义模板对象   CMultiDocTemplate
+		2.保存到CWinApp中   AddDocTemplate
+		3.创建主窗口
+		4.新建文档
+	
+
+	
+
+=================================================
+
+// MFCMdi.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+#include "resource.h"
+
+class CMdiDocument : public CDocument
+{
+	DECLARE_DYNCREATE(CMdiDocument)
+public:
+	
+};
+IMPLEMENT_DYNCREATE(CMdiDocument, CDocument)
+
+
+class CMdiView : public CEditView
+{
+	DECLARE_DYNCREATE(CMdiView)
+public:
+
+};
+IMPLEMENT_DYNCREATE(CMdiView, CEditView)
+
+
+class CChildFrame : public CMDIChildWnd
+{
+	DECLARE_DYNCREATE(CChildFrame)
+public:
+
+};
+IMPLEMENT_DYNCREATE(CChildFrame, CMDIChildWnd)
+
+
+class CMainFrame : public CMDIFrameWnd
+{
+
+};
+
+
+
+
+
+class CMdiApp: public CWinApp
+{
+		DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnNew();
+public:
+	virtual BOOL InitInstance();
+};
+BEGIN_MESSAGE_MAP(CMdiApp, CWinApp)
+	ON_COMMAND(ID_NEW, OnNew)
+END_MESSAGE_MAP()
+
+
+
+void CMdiApp::OnNew()
+{
+	OnFileNew();
+}
+
+CMdiApp theApp;
+
+BOOL CMdiApp::InitInstance()
+{
+	//创建多文档模板
+	CMultiDocTemplate * pDocTemp = NULL;
+	pDocTemp = new CMultiDocTemplate(
+				IDR_MAINFRM,
+				RUNTIME_CLASS(CMdiDocument),
+				RUNTIME_CLASS(CChildFrame),
+				RUNTIME_CLASS(CMdiView)
+				);
+
+	//保存文档模板
+	AddDocTemplate(pDocTemp);
+
+	//创建主窗口
+	CMainFrame *pFrame = new CMainFrame();
+	pFrame->LoadFrame(IDR_MAINFRM);
+	m_pMainWnd = pFrame;
+	m_pMainWnd->ShowWindow(SW_SHOW);
+	m_pMainWnd->UpdateWindow();
+
+
+	
+	//打开新文档
+	OnFileNew();
+	return TRUE;
+}
+
+
+====================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+		
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+

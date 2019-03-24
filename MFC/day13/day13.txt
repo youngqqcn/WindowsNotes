@@ -1,0 +1,137 @@
+
+
+
+COM组件的特点:
+	1.动态链接
+	2.与编程语言无关
+	3.以二进制方式发布
+
+
+
+二  COM接口
+
+	1. 接口的理解: 
+		DLL的接口- DLL导出的函数
+		类的接口 - 类的成员函数
+		COM接口 - 包含了一组函数指针的数据结构, 这些函数是由组件实现的
+
+
+	2. C++接口实现
+		C++使用抽象类
+
+
+	3.接口的动态导出
+
+		
+========================================================
+
+// UseDll.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include "../DllInterface/mymath.h"
+
+typedef IMath *( *CREATEINSTANCE)();
+
+IMath *CreateInst()
+{
+	//加载动态库
+	HMODULE hDll = (HMODULE)LoadLibrary("DllInterface.dll");
+
+	//获取创建接口的函数
+	CREATEINSTANCE CreateInstance = (CREATEINSTANCE) GetProcAddress(hDll, "CreateInstance");
+	
+	//创建接口
+	IMath *piMath = CreateInstance();
+
+	return piMath;
+}
+
+int main(int argc, char* argv[])
+{
+	IMath *piMath = CreateInst();
+
+	printf("%d\n", piMath->Add(100, 100));
+
+	//printf("Hello World!\n");
+	return 0;
+}
+
+
+
+==============================================================		
+
+
+
+	4.接口的生命期
+		4.1 问题 : 在DLL中使用new创建接口后, 在用户程序使用完接口后,如果使用delete
+		    直接删除, 会出现内存异常.
+
+		4.2    new/delete/malloc/free默认情况下, 都是从自己所在模块
+			内存堆crtheap中分配内存和释放内存
+
+			EXE - crtheap
+			DLL - crtheap
+
+
+		4.3 引用计数 和 AddRef/Release 函数
+
+			AddRef 增加引用计数
+			Release 减少引用计数. 当引用计数为0, 接口被删除
+
+		4.4 注意:
+			4.4.1 在调用Release之后, 接口指针不能再使用
+			4.4.2 多线程情况下, 接口引用计数要使用原子锁方式进行加减.
+
+			
+	5.接口的查询
+
+		5.1 每个接口都具有唯一标识GUID
+		5.2 实现接口查询函数
+			QueryInterface		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

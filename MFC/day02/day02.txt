@@ -1,0 +1,571 @@
+消息宏的实现:
+
+======================DECLARE_MESSAGE_MAP===========================================
+	private: 
+		////用于保存消息ID 和 消息处理函数指针 的对应信息
+		static const AFX_MSGMAP_ENTRY _messageEntries[]; 
+	protected: 
+		//保存了_messageEntries数组地址 和 _GetBaseMessageMap函数地址
+		static AFX_DATA const AFX_MSGMAP messageMap; 
+
+		//获取父类的messageMap地址
+		static const AFX_MSGMAP* PASCAL _GetBaseMessageMap(); 
+
+		//获取自己的messageMap的地址
+		virtual const AFX_MSGMAP* GetMessageMap() const; 
+=====================================================================================
+
+
+	数据结构
+		1. AFX_MSGMAP_ENTRY用于保存消息ID 和 消息处理函数指针 的对应信息
+
+		struct AFX_MSGMAP_ENTRY
+		{
+			UINT nMessage;   // windows message
+			UINT nCode;      // control code or WM_NOTIFY code
+			UINT nID;        // control ID (or 0 for windows messages)
+			UINT nLastID;    // used for entries specifying a range of control id's
+			UINT nSig;       // signature type (action) or pointer to message #
+			AFX_PMSG pfn;    // routine to call (or special value)
+		};
+
+		2. AFX_MSGMAP用于保存GetBaseMap函数的地址 和 AFX_MSGMAP_ENTRY 的地址.
+		
+		struct AFX_MSGMAP
+		{
+			const AFX_MSGMAP* (PASCAL* pfnGetBaseMap)();  //函数指针
+			const AFX_MSGMAP_ENTRY* lpEntries;     //数组指针
+		};
+
+
+	3.消息映射过程
+	
+		3.1消息处理函数WindowProc收到消息后, 调用OnWndMsg, 
+			如果OnWndMsg不处理消息,那么WindowProc将
+			调用DefWindowProc默认处理并返回
+
+		3.2 OnWndMsg处理消息过程:
+		   3.2.1 使用GetMessageMap函数获取该窗口类的messageMap的地址
+			const AFX_MSGMAP* pMessageMap; pMessageMap = GetMessageMap();
+		   3.2.2 在messageMap中的lpEntries数组中查找消息ID对应的数组元素
+
+		   3.2.3 如果未找到, 则获取父类的messageMap的地址,返回3.2.2
+		   3.2.4 如果找到, 则获取元素(处理函数地址和父类的messageMap地址)lpEntry
+		   3.2.5 根据找到的 lpEntry的nSig表示, 调用消息处理函数
+
+
+
+====================   消息映射过程 伪代码=======================================================
+	const AFX_MSGMAP* pMessageMap; pMessageMap = GetMessageMap();
+	for (; pMessageMap != NULL;pMessageMap = (*pMessageMap->pfnGetBaseMap)()) //往上(父类)查找
+	{
+		if ((lpEntry = AfxFindMessageEntry(pMessageMap->lpEntries,message, 0, 0)) != NULL)
+		{
+			pMsgCache->lpEntry = lpEntry;
+			AfxUnlockGlobals(CRIT_WINMSGCACHE);
+			goto LDispatch;
+		}
+
+		int nSig = lpEntry->nSig;
+
+		switch (nSig) //根据处理函数类型, 分支
+		{
+		case AfxSig_lwl:
+			lResult = (this->*mmf.pfn_lwl)(wParam, lParam); //调用处理函数
+			break;
+		}
+	}
+=================================================================================================
+
+
+二  MFC的消息分类
+
+	1.窗口消息, 如:   WM_CREATE   WM_PAINT, 鼠标, 键盘等消息
+		这些消息的处理方式是直接调用消息处理函数
+		
+		ON_MESSAGE()
+		ON_WM_XXXX( )
+
+
+	2.命令消息 WM_COMMAND
+		菜单,  工具栏, 按钮 等点击时的命令
+		过程: 消息首先发送给主窗口,由主窗口逐层向子窗口派发.
+		
+		ON_COMMAND()
+		ON_COMMAND_RANGE()
+
+	3.通知消息  WM_NOTIFY
+		子窗口给父窗口的通知消息
+		控件消息宏, 
+		例如:   EN_CHANGE(编辑框内容发生改变)   
+	
+	4.自注册消息
+		用户自定义消息处理
+
+		//用户注册消息, 然后在消息映射中使用
+		UINT RegisterWindowMessage(LPCTSTR lpString);
+
+		返回注册成功的消息ID (0xC000-0xFFFF)
+		消息映射宏  ON_REGISTERED_MESSAGE
+
+		消息处理与窗口消息处理类似, 但是在查找消息处理函数和执行
+		消息处理函数时不同
+
+
+	
+		// for Registered Windows messages
+		#define ON_REGISTERED_MESSAGE(nMessageVariable, memberFxn) \
+		{ 0xC000, 0, 0, 0, (UINT)(UINT*)(&nMessageVariable), \
+			/*implied 'AfxSig_lwl'*/ \
+			(AFX_PMSG)(AFX_PMSGW)(LRESULT (AFX_MSG_CALL CWnd::*)(WPARAM, LPARAM))&memberFxn },
+===========================================================
+// MFCMsg.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+
+
+class CMsgFrame : public CFrameWnd
+{
+public:
+	virtual LRESULT WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+public:
+	DECLARE_MESSAGE_MAP() ;
+
+public:
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnTest01();
+	afx_msg void OnTest02_04(UINT uID);
+	afx_msg void OnEnChange();  //虽然是 走 WM_COMMAND 消息, 但是分为 notify 消息
+};
+
+//消息映射 宏实现
+BEGIN_MESSAGE_MAP(CMsgFrame, CFrameWnd )
+	ON_WM_CREATE()
+	ON_COMMAND(1001, OnTest01)
+	ON_COMMAND_RANGE(1001, 1004, OnTest02_04)
+	ON_EN_CHANGE(1005, OnEnChange)
+END_MESSAGE_MAP()
+
+
+
+void CMsgFrame::OnEnChange()
+{
+	CWnd *pWnd =  GetDlgItem(1005);
+	CString strText;
+	pWnd->GetWindowText(strText);
+	AfxMessageBox(strText);
+
+
+}
+
+int CMsgFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	CreateWindow("BUTTON", "Test01", WS_CHILD|WS_VISIBLE, 50, 50, 200, 30, GetSafeHwnd(), (HMENU)1001, AfxGetApp()->m_hInstance, NULL);
+
+	CreateWindow("BUTTON", "Test02", WS_CHILD|WS_VISIBLE, 50, 100, 200, 30, GetSafeHwnd(), (HMENU)1002, AfxGetApp()->m_hInstance, NULL);
+
+	CreateWindow("BUTTON", "Test03", WS_CHILD|WS_VISIBLE, 50, 150, 200, 30, GetSafeHwnd(), (HMENU)1003, AfxGetApp()->m_hInstance, NULL);
+
+	CreateWindow("BUTTON", "Test04", WS_CHILD|WS_VISIBLE, 50, 200, 200, 30, GetSafeHwnd(), (HMENU)1004, AfxGetApp()->m_hInstance, NULL);
+
+	CreateWindow("EDIT", "",  WS_CHILD|WS_VISIBLE|WS_BORDER,300, 30, 200, 200, GetSafeHwnd(), (HMENU)1005, AfxGetApp()->m_hInstance, NULL);
+
+
+	return 0;
+}
+
+void CMsgFrame::OnTest02_04(UINT uID)
+{
+	CString strInfo;
+	strInfo.Format("%d", uID);
+	AfxMessageBox(strInfo);
+}
+
+void CMsgFrame::OnTest01()
+{
+	AfxMessageBox("OnTest01");
+}
+
+
+
+LRESULT CMsgFrame::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	//switch ... case
+
+
+	return CFrameWnd::WindowProc(uMsg, wParam, lParam);
+}
+
+
+
+
+class CMsgApp : public CWinApp
+{
+public:
+	virtual BOOL InitInstance();
+};
+
+CMsgApp theApp;
+
+
+BOOL CMsgApp::InitInstance()
+{
+
+	CMsgFrame *pWnd = new CMsgFrame();
+	pWnd->Create(NULL, "MsgApp");
+	this->m_pMainWnd = pWnd;
+
+	this->m_pMainWnd->ShowWindow(SW_SHOW);
+	this->m_pMainWnd->UpdateWindow();
+
+	return TRUE;
+}
+
+
+
+========================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+============================================================
+// RegisterMsg.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+
+
+//注册消息id
+UINT g_iRegMsg = RegisterWindowMessage("MYREGMSG");
+
+class CRegisterMsgFrame : public CFrameWnd
+{
+public:	
+	DECLARE_MESSAGE_MAP() ;
+
+public:
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnTest();
+	afx_msg LRESULT OnRegMsg(WPARAM wParam, LPARAM lParam);
+};
+
+
+BEGIN_MESSAGE_MAP(CRegisterMsgFrame, CFrameWnd)
+	ON_WM_CREATE()
+	ON_COMMAND(1001, OnTest)
+	ON_REGISTERED_MESSAGE(g_iRegMsg, OnRegMsg)
+END_MESSAGE_MAP()
+
+
+void CRegisterMsgFrame::OnTest()
+{
+	SendMessage(g_iRegMsg);
+}
+
+
+LRESULT CRegisterMsgFrame::OnRegMsg(WPARAM wParam, LPARAM lParam)
+{
+	AfxMessageBox("Register Msg");
+	return 0;
+}
+
+
+int CRegisterMsgFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+
+	CreateWindow("BUTTON", "Test", WS_CHILD|WS_VISIBLE, 50, 50, 200, 30, GetSafeHwnd(), (HMENU)1001, AfxGetApp()->m_hInstance, NULL);
+	//CreateWindow("BUTTON", "Test01", WS_CHILD|WS_VISIBLE, 50, 50, 200, 30, GetSafeHwnd(), (HMENU)1001, AfxGetApp()->m_hInstance, NULL);
+	
+
+	return 0;
+}
+
+class CRegisterMsgApp : public CWinApp
+{
+public:
+	virtual BOOL InitInstance();
+};
+
+
+CRegisterMsgApp theApp;
+
+
+
+BOOL CRegisterMsgApp::InitInstance()
+{
+	CRegisterMsgFrame *pWnd = new CRegisterMsgFrame();
+	pWnd->Create(NULL, "Register Msg");
+	m_pMainWnd = pWnd;
+	m_pMainWnd->ShowWindow(SW_SHOW);
+	m_pMainWnd->UpdateWindow();
+
+	return TRUE;
+}
+
+========================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+三  MFC菜单
+
+	1.MFC菜单 是 HMENU的封装
+
+
+	2.菜单的用法:
+		2.1 添加菜单资源
+		2.2 创建时, 在窗口中添加菜单
+		2.3 菜单项的命令响应  ON_COMMAND
+
+
+	3. XXXApp中也可以添加消息映射, 
+	   因为: 只要继承 CCmdTarget, 都可以处理消息
+
+
+
+
+=======================================================
+// MFCMenu.cpp : Defines the entry point for the application.
+//
+
+#include "stdafx.h"
+#include "resource.h"
+
+
+
+class  CMenuApp : public CWinApp
+{
+	DECLARE_MESSAGE_MAP()
+public:
+	virtual BOOL InitInstance();
+	afx_msg void OnAbout();
+};
+
+BEGIN_MESSAGE_MAP(CMenuApp, CWinApp)
+	ON_COMMAND(ID_ABOUT, OnAbout)
+END_MESSAGE_MAP()
+
+
+
+void CMenuApp::OnAbout()
+{
+	AfxMessageBox("aboout");
+}
+
+
+class CMenuFrame : public CFrameWnd
+{
+	DECLARE_MESSAGE_MAP()
+public:
+
+	afx_msg void OnExit();
+};
+
+
+BEGIN_MESSAGE_MAP(CMenuFrame, CFrameWnd)
+	ON_COMMAND(ID_EXIT, OnExit)
+END_MESSAGE_MAP()
+
+CMenuApp theApp;
+
+
+void CMenuFrame::OnExit()
+{
+	::PostQuitMessage(WM_QUIT);
+}
+
+BOOL CMenuApp::InitInstance()
+{
+	CMenuFrame *pWnd = new CMenuFrame();
+
+	pWnd->Create(NULL, "MenuApp", WS_OVERLAPPEDWINDOW, CFrameWnd::rectDefault, NULL, MAKEINTRESOURCE(IDR_MAIN));
+	m_pMainWnd = pWnd;
+	m_pMainWnd->ShowWindow(TRUE);
+	m_pMainWnd->UpdateWindow();
+
+
+	return TRUE;
+}
+
+
+=================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

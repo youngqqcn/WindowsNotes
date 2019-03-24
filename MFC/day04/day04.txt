@@ -1,0 +1,135 @@
+一 .切分窗口
+
+
+	1.切分窗口分类:
+	动态切分:
+		在窗口使用过程中, 切分窗口
+
+
+	静态切分: 
+		在创建的时候切分窗口
+
+
+	2.使用
+
+		CSplitterWnd   父类是 CWnd  实现可切分窗口
+
+		2.1  被切分的窗口是 CView的子类
+		2.2 实现切分的代码, 要在 CFrameWnd::OnCreateClient 中实现
+		2.3 CFrameWnd::OnCreateClient 在 FrameWnd的OnCreate函数中被调用
+
+	3. 动态切分窗口的实现
+	   3.1 定义CSplitterWnd变量
+	   3.2 创建CSplitterWnd窗口
+	 	
+
+		virtual BOOL Create(
+  			 CWnd* pParentWnd,
+   			int nMaxRows,
+   			int nMaxCols,
+   			SIZE sizeMin,
+   			CCreateContext* pContext,
+   			DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL | SPLS_DYNAMIC_SPLIT,
+   			UINT nID = AFX_IDW_PANE_FIRST 
+		);
+
+
+	4.静态切分窗口
+	
+		CSplitterWnd::CreateStatic
+			BOOL CreateStatic( CWnd* pParentWnd,
+			int nRows,
+			int nCols,
+			DWORD dwStyle = WS_CHILD | WS_VISIBLE,
+			UINT nID = AFX_IDW_PANE_FIRST
+		);
+
+
+
+
+		1.定义切分窗口变量
+		2.创建静态切分  CSplitterWnd::CreateStatic
+		3.创建视图
+			CSplitterWnd::CreateView
+ 		4.静态切分窗口, 每个Pane需要单独创建View窗口, 这些窗口的view类可以不同
+		5.切分窗口的再切分
+			CSplitterWnd::IdFromRowCol   根据Row和Col获取制定Pane的子窗口
+	
+
+		int IdFromRowCol(
+   			 int row,  
+   			 int col) const;  
+
+
+		virtual BOOL CreateView(
+  			  int row,  
+   			 int col,  
+   			 CRuntimeClass* pViewClass,  
+   			 SIZE sizeInit,  
+   			 CCreateContext* pContext);
+
+
+		//设置激活窗口
+		virtual void SetActivePane(
+   			 int row,  
+   			 int col,  
+   		 CWnd* pWnd = NULL);
+
+		void SetColumnInfo(
+    			int col,  
+    			int cxIdeal,  
+   			 int cxMin);
+
+		void SetRowInfo(
+ 			   int row,  
+ 			   int cyIdeal,  
+  			  int cyMin);
+
+
+		CWnd* GetPane(
+  			  int row,  
+  			  int col) const;  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+	

@@ -1,0 +1,8 @@
+; MFCRegDll2.def : Declares the module parameters for the DLL.
+
+LIBRARY      "MFCRegDll2"
+DESCRIPTION  'MFCRegDll2 Windows Dynamic Link Library'
+
+EXPORTS
+    ; Explicit exports can go here
+	ShowDlg @1

@@ -18,5 +18,45 @@
 
 
 
+> Win32学习视频分享链接：`https://pan.baidu.com/s/104mUu7oQSQGfl0oE7hr6Cw `  提取码：gky6 
 
 
+
+# [MFC学习笔记](MFC/README.md)
+
+- [day01-MFC静态库,动态库,第一个MFC程序](MFC/day01/day01.txt)
+- [day02-剖析MFC消息映射和消息路由机制, 常用消息, 菜单](MFC/day02/day02.txt)
+- [day03-工具栏, 视图 ](MFC/day03/day03.txt)
+- [day04-切分窗口](MFC/day04/day04.txt)
+- [day05-动态创建, 运行时信息, 单文档视图, 多文档视图](MFC/day05/day05.txt)
+- [day06-MFC绘图, GDI绘图](MFC/day06/day06.txt)
+- [day07-GDI绘图, MFC数据集合类](MFC/day07/day07.txt)
+- [day08-MFC文件操作, MFC序列化](MFC/day08/day08.txt)
+- [day09-剖析MFC序列化机制,  MFC对话框](MFC/day09/day09.txt)
+- [day10-MFC对话框](MFC/day10/day10.txt)
+- [day11-MFC通用控件](MFC/day11/day11.txt)
+- [day12-MFC动态库](MFC/day12/day12.txt)
+
+- [day13-COM组件](day13/day13.txt)
+
+
+
+> MFC学习视频分享链接：`https://pan.baidu.com/s/10uxLB6xDeOxK_XnDBe2__Q` 提取码：bbg3 
+
+
+
+
+
+# 感谢
+
+敬爱的老师们:
+
+​        感谢敬爱的老师们, 是您们让学生少走很多弯路, 是您们让学生在漫漫长路中不迷失方向. 
+
+​        未来的路还很长, 我会谨记老师们的教诲, 砥砺前行, 不骄不躁,学会分享,帮助他人,保持学习!
+
+​        最后, 学生在此真心地祝福您们快乐健康幸福!
+
+​    敬礼!
+
+​                                                                                                                 2019-03-24   于深圳
